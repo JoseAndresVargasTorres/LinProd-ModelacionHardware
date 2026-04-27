@@ -1,0 +1,419 @@
+\documentclass[12pt,letterpaper]{article}
+
+% ─── Paquetes ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{tcolorbox}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
+
+% ─── Colores ────────────────────────────────────────────────────────────────
+\definecolor{tecblue}{RGB}{0,70,127}
+\definecolor{tecred}{RGB}{200,0,0}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{mod1}{RGB}{0,102,204}       % Modelo de datos - azul
+\definecolor{mod2}{RGB}{0,153,76}        % Motor simulación - verde
+\definecolor{mod3}{RGB}{204,102,0}       % Interfaz gráfica - naranja
+\definecolor{mod4}{RGB}{153,0,76}        % Reportería/Docs - morado
+\definecolor{rowmod1}{RGB}{220,235,255}
+\definecolor{rowmod2}{RGB}{220,255,235}
+\definecolor{rowmod3}{RGB}{255,235,210}
+\definecolor{rowmod4}{RGB}{245,220,240}
+
+% ─── Encabezado/pie de página ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CE-5507 Modelación Hardware/Software Orientado a Objetos}
+\fancyhead[R]{\small LinProd --- División de Trabajo}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Secciones ──────────────────────────────────────────────────────────────
+\titleformat{\section}{\bfseries\large\color{tecblue}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\bfseries\normalsize\color{tecblue}}{}{0em}{}
+
+% ─── Cajas de módulo ────────────────────────────────────────────────────────
+\tcbuselibrary{skins, breakable}
+\newtcolorbox{modbox}[2][]{
+  colback=#1!8!white,
+  colframe=#1,
+  fonttitle=\bfseries\color{white},
+  coltitle=white,
+  colbacktitle=#1,
+  title=#2,
+  arc=3pt,
+  breakable
+}
+
+% ─── Checkmark ──────────────────────────────────────────────────────────────
+\newcommand{\cmark}{\textcolor{mod2}{\ding{51}}}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada ───────────────────────────────────────────────────────────────
+\begin{center}
+    {\Large\bfseries Proyecto 2}\\[0.3em]
+    {\LARGE\bfseries\color{tecred} LinProd}\\[0.5em]
+    {\large\bfseries División de Trabajo y Primeros Pasos}\\[1em]
+    \textit{Instituto Tecnológico de Costa Rica}\\
+    \textit{Escuela de Ingeniería en Computadores}\\
+    \textit{CE5507 --- Modelación Hardware Software Orientado a Objetos}\\
+    \textit{I Semestre 2026}\\[1em]
+    \textbf{Fecha de entrega:} 16 de mayo de 2026
+\end{center}
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+% ─── 1. ¿QUÉ ES EL PROYECTO? ────────────────────────────────────────────────
+\section*{1. ¿Qué es LinProd?}
+
+LinProd es un \textbf{simulador de producción en serie por eventos discretos}. La idea central es modelar una fábrica de forma virtual: los \emph{productos} entran por un extremo de la línea, pasan por un conjunto de \emph{procesos} (etapas de fabricación), y salen terminados por el otro.
+
+\subsection*{Conceptos clave}
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Producto}: el objeto que recorre la línea (p.ej. un teléfono, un auto).
+    \item \textbf{Tarea}: una máquina que hace \emph{una sola cosa} y tarda un tiempo fijo en hacerla. Solo puede atender un producto a la vez; los demás esperan en cola FIFO.
+    \item \textbf{Proceso}: conjunto ordenado de tareas. El producto recorre todas las tareas del proceso en orden antes de pasar al siguiente proceso.
+    \item \textbf{Línea de producción}: cadena de procesos, con uno marcado como \emph{inicial} (entrada de productos) y uno como \emph{final} (salida).
+    \item \textbf{Ciclo de tiempo} (\(t\)): unidad mínima de simulación. En cada ciclo el motor mueve productos y actualiza estados. No representa segundos reales, es una unidad abstracta.
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.6cm and 1.1cm,
+    box/.style={draw, rounded corners=3pt, minimum width=2cm, minimum height=0.75cm,
+                font=\small\bfseries, align=center},
+    arr/.style={-Stealth, thick},
+    prod/.style={draw, circle, fill=tecred!20, minimum size=0.5cm, font=\tiny}
+]
+    % Procesos
+    \node[box, fill=mod1!15, draw=mod1] (P1) {Proceso 1\\(inicial)};
+    \node[box, fill=mod1!15, draw=mod1, right=of P1] (P2) {Proceso 2};
+    \node[box, fill=mod1!15, draw=mod1, right=of P2] (Pn) {Proceso N\\(final)};
+
+    % Puntos suspensivos
+    \node[right=0.3cm of P2, left=0.3cm of Pn] {\(\cdots\)};
+
+    % Flechas entre procesos
+    \draw[arr] (P1) -- (P2);
+    \draw[arr, dashed] (P2) -- (Pn);
+
+    % Tareas dentro de P1 (debajo)
+    \node[box, fill=mod3!15, draw=mod3, below=0.7cm of P1, xshift=-0.7cm,
+          minimum width=1.1cm, font=\tiny\bfseries] (T11) {Tarea 1};
+    \node[box, fill=mod3!15, draw=mod3, right=0.2cm of T11,
+          minimum width=1.1cm, font=\tiny\bfseries] (T12) {Tarea 2};
+    \draw[arr, mod3] (T11) -- (T12);
+    \draw[arr, dashed, tecblue] (P1) -- (T11.north);
+
+    % Producto en cola
+    \node[prod, left=0.3cm of T11] (pr) {};
+    \draw[arr, tecred] (pr) -- (T11);
+
+    \node[above=0.1cm of pr, font=\tiny\color{tecred}] {Cola};
+\end{tikzpicture}
+\end{center}
+
+\subsection*{Lo que debe entregar el sistema}
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Interfaz gráfica} para crear y enlazar procesos/tareas.
+    \item \textbf{Motor de simulación} que avanza ciclo a ciclo y mueve productos automáticamente.
+    \item \textbf{Pausa + estado}: en cualquier ciclo el usuario puede ``congelar'' la simulación y ver el estado completo de cada tarea y proceso.
+    \item \textbf{Reporte final}: estadísticas de tiempos, cuellos de botella, etc.
+    \item \textbf{Documentación} en PDF con diagrama de clases, análisis de alternativas, problemas y conclusiones.
+\end{enumerate}
+
+\newpage
+% ─── 2. MÓDULOS ─────────────────────────────────────────────────────────────
+\section*{2. División en módulos}
+
+El proyecto se divide en \textbf{4 módulos}, uno por integrante. Los módulos tienen dependencias claras: el Módulo 1 es la base de los demás.
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.5cm,
+    mod/.style={draw, rounded corners=5pt, text width=3.2cm, minimum height=1.2cm,
+                align=center, font=\small\bfseries},
+    dep/.style={-Stealth, thick, dashed, gray}
+]
+    \node[mod, fill=mod1!20, draw=mod1] (M1)
+        {\color{mod1}Módulo 1\\Modelo OOP};
+    \node[mod, fill=mod2!20, draw=mod2, right=2.5cm of M1] (M2)
+        {\color{mod2}Módulo 2\\Motor de Simulación};
+    \node[mod, fill=mod3!20, draw=mod3, below=1.5cm of M1] (M3)
+        {\color{mod3}Módulo 3\\Interfaz Gráfica};
+    \node[mod, fill=mod4!20, draw=mod4, below=1.5cm of M2] (M4)
+        {\color{mod4}Módulo 4\\Reportería y Docs};
+
+    \draw[dep] (M1) -- node[above, font=\tiny]{usa} (M2);
+    \draw[dep] (M1) -- node[left, font=\tiny]{usa} (M3);
+    \draw[dep] (M2) -- node[right, font=\tiny]{usa} (M4);
+    \draw[dep] (M3) -- node[below, font=\tiny]{usa} (M4);
+    \draw[dep] (M1) -- node[above left, font=\tiny]{} (M4);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{modbox}[mod1]{Módulo 1 --- Modelo de Datos OOP \hfill \normalfont\small(base de todo)}
+Contiene las clases centrales del dominio. No depende de ningún otro módulo; los demás lo importan.
+
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+    \item \textbf{Clase \texttt{Product}}: atributos \texttt{id}, \texttt{entry\_time}, \texttt{exit\_time}, historial de tiempos por tarea.
+    \item \textbf{Clase \texttt{Task}}: \texttt{name}, \texttt{process\_time} (en ciclos), bandera \texttt{busy}, referencia al producto en proceso, cola FIFO de productos en espera. Métodos: \texttt{receive(product)}, \texttt{tick()}, \texttt{is\_done()}, \texttt{snapshot()}.
+    \item \textbf{Clase \texttt{Process}}: \texttt{name}, lista ordenada de \texttt{Task}, banderas \texttt{is\_initial} / \texttt{is\_final}, referencia al proceso siguiente. Métodos: \texttt{add\_task()}, \texttt{receive(product)}, \texttt{tick()}, \texttt{snapshot()}.
+    \item \textbf{Clase \texttt{ProductionLine}}: lista ordenada de \texttt{Process}. Valida que exista exactamente un proceso inicial y uno final. Método \texttt{validate()}.
+\end{itemize}
+
+\textbf{Entregable interno:} módulo Python importable (\texttt{model.py} o paquete \texttt{model/}) con estas clases listas y probadas en aislamiento.
+\end{modbox}
+
+\vspace{0.7em}
+
+\begin{modbox}[mod2]{Módulo 2 --- Motor de Simulación}
+Orquesta el avance del tiempo y el movimiento de productos. Depende \emph{solo} del Módulo 1.
+
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+    \item \textbf{Clase \texttt{Simulator}}: recibe una \texttt{ProductionLine} y una cantidad de productos. Atributos: \texttt{current\_cycle}, lista de productos completados, estado de pausa.
+    \item \textbf{Método \texttt{run(n\_cycles)}}: bucle principal. En cada ciclo llama \texttt{tick()} a cada proceso en orden, luego transfiere productos entre procesos si corresponde.
+    \item \textbf{Lógica de movimiento}: cuando una tarea termina de procesar, el producto pasa automáticamente a la siguiente tarea (o al proceso siguiente si era la última tarea).
+    \item \textbf{Pausa}: método \texttt{pause()} que congela la simulación y dispara el snapshot. Método \texttt{resume()}.
+    \item \textbf{Re-inicialización}: método \texttt{reset()} que limpia los estados de todos los objetos sin recrear la línea.
+    \item \textbf{Generación de estadísticas}: acumula en cada ciclo datos que el Módulo 4 usará (tiempos de espera por tarea, productos completados, ciclo de finalización de cada producto).
+\end{itemize}
+
+\textbf{Entregable interno:} clase \texttt{Simulator} funcionando en modo consola (sin GUI), con los datos de estadísticas exportables como diccionario/dataclass.
+\end{modbox}
+
+\vspace{0.7em}
+
+\begin{modbox}[mod3]{Módulo 3 --- Interfaz Gráfica}
+Toda la capa visual. Depende del Módulo 1 para crear objetos y del Módulo 2 para controlar la simulación.
+
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+    \item \textbf{Pantalla de configuración}: formulario para crear procesos (nombre, número de tareas, tiempo por tarea), designar inicial/final, enlazar procesos en orden.
+    \item \textbf{Vista de simulación}: muestra cada proceso y sus tareas con el producto que están procesando y el tamaño de la cola. Se actualiza cada ciclo visualmente.
+    \item \textbf{Barra de control}: botones \emph{Iniciar}, \emph{Pausar}, \emph{Reanudar}, \emph{Reiniciar}, selector de velocidad (ciclos/segundo).
+    \item \textbf{Panel de snapshot}: al pausar, muestra el estado completo de cada tarea en ese ciclo.
+    \item \textbf{Efectos gráficos}: animación de movimiento de productos entre tareas, colores para tarea ocupada/libre/con cola.
+\end{itemize}
+
+\textbf{Entregable interno:} aplicación GUI funcional que construye una \texttt{ProductionLine} a partir de la entrada del usuario y llama a \texttt{Simulator.run()}.
+\end{modbox}
+
+\vspace{0.7em}
+
+\begin{modbox}[mod4]{Módulo 4 --- Reportería y Documentación}
+Consume los datos del Módulo 2 y genera reportes. También es responsable del PDF de documentación final.
+
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+    \item \textbf{Clase \texttt{ReportGenerator}}: recibe las estadísticas del \texttt{Simulator} y calcula:
+    \begin{itemize}
+        \item Tiempo del primer y último producto completado.
+        \item Tiempo promedio de finalización.
+        \item Cuello de botella: proceso/tarea con mayor cola promedio.
+        \item Tiempo promedio de espera en cola por tarea.
+        \item Tiempo total de procesamiento de todos los productos.
+    \end{itemize}
+    \item \textbf{Vista de reporte}: ventana o pantalla en la GUI (coordinar con Módulo 3) que muestra el reporte de forma clara y ordenada al finalizar la simulación.
+    \item \textbf{Documentación PDF}: diagrama de clases UML, alternativas de solución evaluadas, problemas encontrados y su solución, conclusiones y bibliografía.
+\end{itemize}
+
+\textbf{Entregable interno:} clase \texttt{ReportGenerator} que recibe un dict de estadísticas y retorna un dict de métricas calculadas; pantalla de reporte integrada en la GUI.
+\end{modbox}
+
+\newpage
+% ─── 3. TABLA RESUMEN ───────────────────────────────────────────────────────
+\section*{3. Tabla resumen de responsabilidades}
+
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|c|l|X|c|}
+\hline
+\rowcolor{tecblue!80}
+\textbf{\color{white}Integrante} & \textbf{\color{white}Módulo} & \textbf{\color{white}Responsabilidades principales} & \textbf{\color{white}Pts rúbrica} \\
+\hline
+\rowcolor{rowmod1}
+1 & Modelo OOP & Clases \texttt{Product}, \texttt{Task}, \texttt{Process}, \texttt{ProductionLine}; lógica de cola FIFO; validaciones OOP. & 10 + 10 \\
+\hline
+\rowcolor{rowmod2}
+2 & Motor de Simulación & Bucle de ciclos, movimiento automático de productos, pausa/snapshot, re-inicialización, exportación de estadísticas. & 10 + 5 + 5 \\
+\hline
+\rowcolor{rowmod3}
+3 & Interfaz Gráfica & Pantalla de config de procesos/tareas, vista de simulación, efectos gráficos, botones de control. & 10 + 5 + 5 \\
+\hline
+\rowcolor{rowmod4}
+4 & Reportería y Docs & Cálculo de estadísticas, pantalla de reporte, PDF de documentación (diagrama UML, problemas, conclusiones). & 5 + 15 \\
+\hline
+\multicolumn{3}{|r|}{\textbf{Total}} & \textbf{100} \\
+\hline
+\end{tabularx}
+
+\vspace{1em}
+\textit{Nota: los puntos de ``Programación y Git'' (10 pts) son responsabilidad \textbf{compartida} de todo el grupo: commits frecuentes de todos, ramas por integrante, PRs revisados.}
+
+% ─── 4. CRONOGRAMA ──────────────────────────────────────────────────────────
+\section*{4. Cronograma tentativo}
+
+\begin{tabularx}{\textwidth}{|c|X|l|}
+\hline
+\rowcolor{tecblue!80}
+\textbf{\color{white}Semana} & \textbf{\color{white}Hitos} & \textbf{\color{white}Fecha aprox.} \\
+\hline
+1 & Acordar framework GUI, estructura de carpetas, interfaces entre módulos. Módulo 1: clases base escritas. & 25 abr -- 1 may \\
+\hline
+2 & Módulo 1 completo y probado. Módulo 2: motor funcional en consola. Módulo 3: pantalla de configuración. & 2 -- 8 may \\
+\hline
+3 & Módulo 2 + 3 integrados (GUI lanza simulación). Módulo 4: cálculo de estadísticas. & 9 -- 12 may \\
+\hline
+4 & Integración final, pruebas con 5+ procesos, reporte completo, documentación PDF, ensayo de exposición. & 13 -- 16 may \\
+\hline
+\end{tabularx}
+
+% ─── 5. INTERFACES ACORDADAS ────────────────────────────────────────────────
+\section*{5. Interfaces entre módulos (acuerdos a definir en semana 1)}
+
+Para que los cuatro puedan trabajar en paralelo sin bloquearse, el equipo debe acordar estas interfaces \textbf{antes} de empezar a programar:
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Firma de \texttt{Task.tick(current\_cycle)}}: ¿retorna un \texttt{Product} cuando termina, o \texttt{None}? ¿Quién llama a \texttt{tick}, el \texttt{Process} o el \texttt{Simulator}?
+    \item \textbf{Firma de \texttt{Simulator.get\_stats()}}: ¿qué estructura de datos retorna? (diccionario, dataclass) El Módulo 4 depende de esto.
+    \item \textbf{Callback de pausa}: ¿el \texttt{Simulator} llama una función que le pasa el Módulo 3, o la GUI hace polling?
+    \item \textbf{Estructura de snapshot}: ¿qué campos tiene el objeto que imprime el estado de una tarea? (para que Módulo 3 y Módulo 4 lo usen igual).
+    \item \textbf{Framework GUI}: decisión colectiva. Se recomienda \textbf{Tkinter} (incluido en Python, sin instalación) o \textbf{PyQt6} (más potente, requiere \texttt{pip install}).
+\end{enumerate}
+
+\newpage
+% ─── 6. PRIMEROS PASOS ──────────────────────────────────────────────────────
+\section*{6. Primeros pasos (semana 1)}
+
+Los siguientes pasos deben completarse \textbf{todos juntos o en coordinación} antes de que cada quien empiece su módulo. El orden importa.
+
+\subsection*{Paso 1 --- Estructura del repositorio}
+
+Crear la siguiente estructura de carpetas en el repositorio y hacer un commit:
+
+\begin{verbatim}
+LinProd-ModelacionHardware/
+├── linprod/
+│   ├── __init__.py
+│   ├── model.py          # Módulo 1
+│   ├── simulator.py      # Módulo 2
+│   ├── gui/
+│   │   ├── __init__.py
+│   │   ├── app.py        # Módulo 3 - ventana principal
+│   │   └── views/        # pantallas individuales
+│   └── reports.py        # Módulo 4
+├── tests/
+│   ├── test_model.py
+│   ├── test_simulator.py
+│   └── test_reports.py
+├── main.py               # punto de entrada
+├── requirements.txt
+├── CLAUDE.md
+└── docs/
+    └── diagrama_clases.drawio
+\end{verbatim}
+
+\subsection*{Paso 2 --- Entorno virtual y dependencias}
+
+Cada integrante ejecuta en su máquina:
+\begin{verbatim}
+python -m venv venv
+source venv/bin/activate        # Linux/Mac
+venv\Scripts\activate           # Windows
+pip install pytest
+pip install PyQt6               # o el framework elegido
+pip freeze > requirements.txt
+\end{verbatim}
+
+\subsection*{Paso 3 --- Ramas de trabajo}
+
+Cada integrante trabaja en su propia rama y hace PRs a \texttt{development}:
+\begin{verbatim}
+git checkout -b modulo1-modelo     # Integrante 1
+git checkout -b modulo2-simulador  # Integrante 2
+git checkout -b modulo3-gui        # Integrante 3
+git checkout -b modulo4-reportes   # Integrante 4
+\end{verbatim}
+
+\subsection*{Paso 4 --- Diagrama de clases preliminar}
+
+Antes de escribir código, el \textbf{Integrante 1} dibuja un diagrama UML preliminar con:
+\begin{itemize}[leftmargin=2em]
+    \item Los atributos y métodos de cada clase.
+    \item Las relaciones (composición, asociación).
+    \item Las interfaces/firmas acordadas en la Sección 5.
+\end{itemize}
+El equipo lo revisa y lo aprueba. Esto evita retrabajos.
+
+\subsection*{Paso 5 --- Stub de clases (``esqueleto'')}
+
+El Integrante 1 crea \texttt{model.py} con las clases vacías (solo \texttt{pass} y docstrings) para que los demás puedan importarlas y empezar a programar contra esas interfaces:
+
+\begin{verbatim}
+# model.py  (versión inicial - solo esqueleto)
+class Product:
+    def __init__(self, product_id, entry_cycle):
+        pass
+
+class Task:
+    def __init__(self, name, process_time):
+        pass
+    def receive(self, product): pass
+    def tick(self, current_cycle): pass
+    def is_done(self): pass
+    def snapshot(self): pass
+
+class Process:
+    def __init__(self, name, is_initial=False, is_final=False):
+        pass
+    def add_task(self, task): pass
+    def receive(self, product): pass
+    def tick(self, current_cycle): pass
+    def snapshot(self): pass
+
+class ProductionLine:
+    def __init__(self):
+        pass
+    def add_process(self, process): pass
+    def validate(self): pass
+\end{verbatim}
+
+Una vez acordado el esqueleto, cada integrante puede trabajar en su módulo de forma independiente.
+
+% ─── 7. CRITERIOS DE ÉXITO ──────────────────────────────────────────────────
+\section*{7. Criterio de éxito en la defensa}
+
+El profesor llegará con una línea de \textbf{mínimo 5 procesos ya parametrizada}. El grupo deberá:
+\begin{enumerate}[leftmargin=2em]
+    \item Ingresar esa configuración en la GUI en tiempo real.
+    \item Iniciar la simulación.
+    \item En el ciclo \(T\) indicado, pausar y mostrar el estado de cada tarea/proceso.
+    \item Al finalizar, generar el reporte. Los resultados deben coincidir con los de los demás grupos (misma línea $\Rightarrow$ mismos números).
+\end{enumerate}
+
+Esto significa que la \textbf{lógica de simulación debe ser determinística}: dado el mismo input, siempre produce el mismo output.
+
+\end{document}
