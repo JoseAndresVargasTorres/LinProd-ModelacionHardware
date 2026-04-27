@@ -1,0 +1,342 @@
+\documentclass[12pt,letterpaper]{article}
+
+% ─── Paquetes ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+% ─── Colores ────────────────────────────────────────────────────────────────
+\definecolor{tecblue}{RGB}{0,70,127}
+\definecolor{tecred}{RGB}{200,0,0}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{checkgreen}{RGB}{0,150,0}
+
+% ─── Encabezado/pie de página ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CE-5507 Modelacion Hardware/Software Orientado a Objetos}
+\fancyhead[R]{\small Ing. Marco Hernández Vásquez / Ing. Luis Alonso Barboza}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Secciones ──────────────────────────────────────────────────────────────
+\titleformat{\section}{\bfseries\large\color{tecblue}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\bfseries\normalsize}{}{0em}{}
+
+% ─── Checkmark ──────────────────────────────────────────────────────────────
+\newcommand{\cmark}{\textcolor{checkgreen}{\ding{51}}}
+
+% ─── Columna centrada para tablas ───────────────────────────────────────────
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada / Encabezado ───────────────────────────────────────────────────
+\begin{center}
+    {\Large\bfseries Proyecto 2}\\[0.3em]
+    {\LARGE\bfseries\color{tecred} LinProd}\\[1em]
+    \textit{Instituto Tecnológico de Costa Rica}\\
+    \textit{Escuela de Ingeniería en Computadores}\\
+    \textit{CE5507 -- Modelación Hardware Software Orientado a Objetos}\\
+    \textit{I Semestre 2026}
+\end{center}
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+% ─── Objetivo general ───────────────────────────────────────────────────────
+\section*{Objetivo general}
+\begin{itemize}[leftmargin=2em]
+    \item Realizar un sistema de producción usando el paradigma de orientación a objetos.
+\end{itemize}
+
+% ─── Objetivos específicos ──────────────────────────────────────────────────
+\section*{Objetivos específicos}
+\begin{itemize}[leftmargin=2em]
+    \item Realizar un programa usando el lenguaje de programación Python.
+    \item Aplicar los conocimientos en orientación a objetos en un programa definido.
+    \item Resolver un problema de línea de procesamiento mediante programación.
+    \item Investigar y utilizar herramientas gráficas para visualizar el comportamiento esperado.
+\end{itemize}
+
+% ─── Datos Generales ────────────────────────────────────────────────────────
+\section*{Datos Generales}
+\begin{itemize}[leftmargin=2em]
+    \item El valor del Proyecto: 15\%
+    \item Nombre código: \underline{LinProd}
+    \item El proyecto debe ser implementado por grupos de mínimo 3 personas, máximo de 5 personas.
+    \item La fecha de entrega del proyecto es de \textbf{16/mayo/2026}.
+    \item Cualquier indicio de copia de proyectos será calificado con una nota de 0 y será procesado de acuerdo con el reglamento.
+\end{itemize}
+
+% ─── Marco Teórico ──────────────────────────────────────────────────────────
+\section*{Marco Teórico}
+
+La producción en cadena, trabajo en cadena, producción en masa, producción en serie o fabricación en serie, es el proceso revolucionario en la producción industrial cuya base es la cadena de montaje, línea de ensamblado o línea de producción; una forma de organización de la producción que delega a cada trabajador o robot o etapa, una función específica y especializada en máquinas también más desarrolladas.
+
+Productos de uso cotidiano como el teléfono móvil, el ordenador o el coche son ejemplos de la producción en serie. Por lo tanto, podemos asegurar rotundamente que la aparición de la producción en cadena supuso un antes y un después en la manera de producir de la época y que sembró los cambios que originaron la sociedad contemporánea que conocemos hoy en día.
+
+\subsection*{¿Qué características tiene la producción en serie?}
+
+La principal característica de la producción en serie es que el proceso de fabricación del bien o producto final se divide en fases o partes, lo que implica que para cada una de ellas existe un trabajador o una máquina específica y especializada que realiza la acción.
+
+Los ejemplos más comunes de producción en serie incluyen la fabricación de productos en líneas de montaje, los procesos de producción alimentaria, el trabajo en cadena en doctores, dentistas, laboratorios, etc., los servicios como cortar el cabello y otros trabajos manuales. Por ejemplo, una industria de fabricación de automóviles tendrá una línea de producción en la que los componentes se ensamblan por etapas. Esto se aplica a la fabricación de productos desde aerosol hasta coches enteros.
+
+La producción en serie es un proceso en el cual todos los productos finales llevan a cabo una serie de procesos idénticos. Los mismos procesos se repiten una y otra vez para cada producto, excepto las operaciones de mantenimiento. Esto reduce al mínimo el tiempo de producción, asegurando la producción a gran escala con estándares de calidad. El objetivo principal en la producción en serie es ahorrar tiempo y costos al reducir la cantidad de tiempo necesario para producir un producto determinado, evitando el desperdicio de materiales.
+
+Otras industrias en las que se utiliza la producción en serie incluyen la fabricación de productos de plástico, fabricación de alfombras, fabricación de medicamentos, televisores, lavadoras, etc. Estos son sólo algunos ejemplos de producción en serie.
+
+\noindent\textit{Tomado de \url{https://ejemplos.com.mx/generales/ejemplos-de-produccion-en-serie/}}
+
+\subsection*{La simulación como herramienta de valor en entornos de producción ajustada}
+
+La simulación permite modelizar un sistema y realizar modificaciones sobre el mismo sin riesgo y con coste casi nulo. Aplicada a sistemas de producción, la simulación permite modelizar células de fabricación, líneas y plantas enteras, en el nivel de detalle deseado. Por ejemplo, podría modelizarse una célula de fabricación compuesta por varias máquinas, y después integrar ese modelo en uno de mayor nivel, a nivel de planta.
+
+Las plantas productivas o células de fabricación están compuestas por máquinas, personas, almacenes intermedios y elementos de manipulación que hacen difícil conocer y visualizar el flujo de los materiales en el espacio y en el tiempo. Si bien es fácil de entender (que no de llevar a cabo) la optimización de una máquina, por su carácter local, es difícil comprender la influencia de un tiempo de máquina, o un tiempo de grúa, o determinado nivel de disponibilidad de máquina en el comportamiento global del sistema. Ahí es donde la simulación aporta valor, destacando su carácter visual que facilita la comprensión y el análisis. La fuerza de la simulación reside en que permite modelizar el sistema tal y como es, mediante herramientas comerciales que facilitan la modelización (similar a dibujar un diagrama de procesos), por lo que los gestores y responsables de producción pueden interpretar y comprender tanto el modelo desarrollado como los resultados obtenidos.
+
+A nivel técnico, la simulación de los sistemas de producción se realiza mediante programas de simulación por eventos discretos. Estos sistemas se caracterizan por mantener un estado interno global del sistema, que cambia parcialmente debido a la ocurrencia de un evento. Ejemplos de evento pueden ser la terminación del ciclo en una máquina, la ocurrencia de una avería, la entrada de una nueva orden de fabricación. En definitiva, un evento es toda aquella incidencia que cambia el estado del sistema e implica, normalmente, una acción. Ante un evento de terminación de ciclo en máquina, la acción correspondiente puede ser descargar esa pieza de máquina y cargar la máquina con la siguiente pieza. Todas estas serían tareas.
+
+La simulación puede emplearse en muchas de las problemáticas a las que se enfrentan las personas de producción, tanto a la hora de mejorar células o líneas existentes, como a la hora de diseñar nuevas. Es por lo tanto una herramienta de aplicación creciente en sectores como la automoción, logística, aeronáutica y, en general, sectores de producción de alto valor añadido. Lógicamente, esta herramienta debe ser combinada con otras herramientas de análisis de datos. Es el analista o consultor de procesos quien debe decidir qué herramienta utilizar en cada ocasión, dependiendo del objetivo, alcance y complejidad del caso a analizar.
+
+% ─── Requerimientos ─────────────────────────────────────────────────────────
+\section*{Requerimientos del Proyecto}
+
+Se desea realizar un \textbf{simulador de producción en serie} el cual debe cumplir con los siguientes requerimientos. Asuma que una tarea es como una máquina que realiza una tarea específica.
+
+\vspace{0.5em}
+\begin{longtable}{|p{13cm}|C{1.5cm}|}
+\hline
+\textbf{Requerimiento} & \textbf{} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Requerimiento} & \\
+\hline
+\endhead
+Debe ser implementado usando el Lenguaje de programación Python & \cmark \\
+\hline
+Debe programar usando Orientación a objetos & \cmark \\
+\hline
+La línea de producción debe estar compuesta por una o más procesos. Estos se solicitan en tiempo de ejecución. & \cmark \\
+\hline
+El programa debe permitir la implementación \textbf{ilimitada} de procesos. Debe al menos existir un proceso, pero se debe poder crear todos los procesos que se consideren necesarios (sin limitación). & \cmark \\
+\hline
+Cada proceso debe tener una o más tareas (tampoco debe haber un máximo) y se crean en tiempo de ejecución. & \cmark \\
+\hline
+Las tareas de un proceso tienen un orden de ejecución que se debe respetar. & \cmark \\
+\hline
+Cada tarea pertenece a un proceso y por ende ``hereda'' las características del proceso. & \cmark \\
+\hline
+Cada proceso tiene un número determinado de tareas, y no necesariamente el mismo número ni características que en los demás procesos. & \cmark \\
+\hline
+El programa debe permitir la implementación ilimitada de tareas & \cmark \\
+\hline
+Cada proceso y cada tarea deben tener atributos y métodos que los caracteriza de manera explícita. & \cmark \\
+\hline
+Cada proceso tiene la posibilidad de identificar al proceso de entrada que le llama & \cmark \\
+\hline
+Se debe identificar de forma explícita el proceso inicial y el proceso final de toda la línea de producción. & \cmark \\
+\hline
+Cada tarea dentro de los procesos posee un tiempo de procesamiento. & \cmark \\
+\hline
+Cada tarea solamente puede procesar un producto a la vez, y debe haber algún atributo que indique si se está procesando o no (si la máquina está ocupada o no). En caso de que un producto llegue a una tarea que se encuentra procesando, debe esperar su turno. & \cmark \\
+\hline
+El producto se mantendrá siendo procesado de acuerdo con el tiempo configurado del proceso de la tarea. & \cmark \\
+\hline
+Se debe tener la posibilidad de tener productos en espera, se debe llevar un contador de los productos en espera y se atenderán de acuerdo con su llegada, o sea tipo FIFO. & \cmark \\
+\hline
+Cuando se finalice el tiempo de procesamiento de un producto, éste pasará automáticamente a la siguiente tarea. No hay demora. & \cmark \\
+\hline
+Se debe tener la posibilidad de ver el estado total y detallado de toda la línea de procesamiento en todo momento, esto es, ver la simulación de alguna manera, mostrando la atención de insumos en cada tarea y proceso, así como insumos completados totalmente y los insumos pendientes a iniciar el proceso. Esto se hace por medio de una Pausa en el procesamiento. & \cmark \\
+\hline
+Se debe hacer uso de efectos gráficos en el aplicativo. & \cmark \\
+\hline
+Se debe tener la posibilidad de generar reportería o información detallada de todo el proceso. & \cmark \\
+\hline
+Se debe poder volver a inicializar la misma simulación con los procesos y tareas definidas previamente, y/o con otro o el mismo número de objetos que entrarán a la línea de proceso al momento de iniciarla. & \cmark \\
+\hline
+Se debe tener la posibilidad de modificar la línea de producción y volver a realizar la simulación más de una vez, pero con distintas características en los procesos, y numero de estos. & \cmark \\
+\hline
+El programa debe ser controlado por ciclos de tiempo (no necesariamente son literales) pero simularán los tiempos en los cuales cada objeto tardará en ser procesado en cada tarea. Se debe definir un $t$ (tiempo). & \cmark \\
+\hline
+El programa debe tener la posibilidad de ``pausar'' toda la línea de procesos en un ciclo de tiempo determinado, e imprimir un estado de todos y cada uno de los procesos juntamente con sus tareas con respecto a las tareas que se encuentran atendiendo en esos momentos. Esto es, se debe ser capaz de sacar una ``foto'' del estado de toda la línea de procesos en cualquier momento del procesamiento. & \cmark \\
+\hline
+\end{longtable}
+
+% ─── Interfaz Gráfica ───────────────────────────────────────────────────────
+\section*{Interfaz Gráfica}
+
+Se debe contar con una interfaz gráfica en donde se puede parametrizar cada uno de los procesos.
+
+\begin{enumerate}
+    \item Se debe poder crear el proceso (con los datos de inicialización necesarios).
+    \item Parametrizar aquellos elementos propios.
+    \item Determinar si es el proceso inicial (solamente puede existir un proceso inicial).
+    \item Determinar si es el proceso final (solamente puede existir un proceso final).
+    \item Se debe poder enlazar el proceso con el proceso anterior, de tal manera que se pueda generar de forma efectiva la línea de procesos. \hfill \cmark
+\end{enumerate}
+
+% ─── Reportería ─────────────────────────────────────────────────────────────
+\section*{Reportería}
+
+Al finalizar completamente la línea de producción con los insumos dados, se debe generar un reporte que como mínimo y de una manera agradable presente los siguientes datos: \hfill \cmark
+
+\begin{itemize}
+    \item Tiempo en que el primer producto logró terminar con éxito toda la línea de producción.
+    \item Tiempo en que el último producto logró terminar con éxito toda la línea de producción.
+    \item Tiempo promedio en que se logró determinar con éxito toda la línea de producción.
+    \item Proceso que generó el mayor congestionamiento de productos (cuello de botella).
+    \item Tiempo promedio de espera de productos para iniciar una tarea.
+    \item Proceso y tarea con mayor tiempo de espera.
+    \item Tiempo total del procesamiento de todos los productos.
+    \item Cualquier otra estadística que considere el grupo que sea necesaria.
+\end{itemize}
+
+% ─── Funcionalidad recomendada ──────────────────────────────────────────────
+\section*{Funcionalidad recomendada}
+
+\begin{itemize}
+    \item Cada proceso se encuentra compuesto de una serie de tareas.
+    \item Cada tarea tiene un tiempo medido en ciclos.
+    \item En cada ciclo (se debe tener este control) se realizarán movimientos de objetos a las tareas.
+\end{itemize}
+
+% ─── Documentación y aspectos operativos ────────────────────────────────────
+\section*{Documentación y aspectos operativos}
+
+Al finalizar el proyecto en la fecha indicada, se deberá entregar un documento que contenga lo siguiente:
+
+\begin{itemize}
+    \item[\checkmark] Diagrama de clases.
+    \item[\checkmark] Alternativas de solución consideradas y justificación de la seleccionada.
+    \item[\checkmark] Problemas conocidos: En esta sección se detalla cualquier problema que no se ha podido solucionar en el trabajo.
+    \item[\checkmark] Problemas encontrados: descripción detallada, intentos de solución sin éxito, solución encontrada con su descripción detallada, recomendaciones, conclusiones y bibliografía consultada para este problema específico.
+    \item[\checkmark] Conclusiones y Recomendaciones del proyecto.
+    \item[\checkmark] Bibliografía consultada en todo el proyecto.
+\end{itemize}
+
+% ─── Evaluación ─────────────────────────────────────────────────────────────
+\section*{Evaluación}
+
+\begin{enumerate}
+    \item No debe imprimirse la documentación, y esta debe encontrarse en formato PDF.
+    \item La entrega debe hacerse usando el TECDigital.
+    \item La revisión de la documentación será realizada por parte del profesor, no durante la defensa del proyecto.
+    \item Se deberá realizar una exposición del trabajo realizado a los demás compañeros.
+    \item Cada grupo tendrá como máximo 15 minutos para exponer su trabajo en la exposición y realizar la defensa de éste.
+    \item El profesor llevará a un diagrama de línea de proceso con mínimo 5 procesos. Para cada tarea se tendrá su respectiva parametrización, y una cantidad de objetos determinada al inicio de la línea de procesos. Se deberá parametrizar el programa con los datos dados por el profesor, y en un ciclo $T$ de tiempo se solicitará detener la línea de procesos y generar una reportería para ver el estado de cada tarea y cada proceso. Dado que todos los grupos usarán la misma línea de proceso, se esperan resultados casi idénticos en la reportería generada.
+    \item Cada grupo debe trabajar en un repositorio en GitHub. Se revisará el trabajo progresivo, así como la participación de todos los integrantes.
+    \item El profesor llevará un listado de todos los requerimientos (puntos) solicitados en el presente enunciado y será evaluado en el producto final.
+\end{enumerate}
+
+% ─── Rúbrica de Calificación ────────────────────────────────────────────────
+\newpage
+\section*{Rúbrica de Calificación}
+
+\small
+\begin{longtable}{|p{3.2cm}|p{3cm}|p{3cm}|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{Criterio} & \textbf{Muy Adecuado} & \textbf{Adecuado} & \textbf{Poco Adecuado} & \textbf{No hubo participación o Trabajo Deficiente} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Criterio} & \textbf{Muy Adecuado} & \textbf{Adecuado} & \textbf{Poco Adecuado} & \textbf{No hubo participación o Trabajo Deficiente} \\
+\hline
+\endhead
+Programación realizada y uso de repositorio GIT &
+Muy adecuada la programación realizada (10 pts) &
+No cumple con todas las consideraciones de una programación adecuada (5 pts) &
+Incompleto o desordenada programación (2 pts) &
+No hay evidencia del cumplimiento de lo solicitado (0 pts) \\
+\hline
+Uso de programación Orientada a Objetos &
+Muy adecuada la programación realizada (10 pts) &
+No cumple con todas las consideraciones de una programación adecuada (5 pts) &
+Incompleto o desordenada programación (2 pts) &
+No hay evidencia del cumplimiento de lo solicitado (0 pts) \\
+\hline
+App permite crear uno o más procesos &
+Interfaz gráfica permite la gestión adecuada de procesos (10 pts) &
+Una gestión o interfaz no adecuado de procesos (5 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Se identifica de forma explícita el primero y el último proceso de la línea de producción &
+Interfaz gráfica permite la gestión adecuada de procesos (10 pts) &
+Una gestión o interfaz no adecuado de procesos (5 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Los procesos poseen un orden de ejecución dentro de la simulación &
+Interfaz gráfica permite la gestión adecuada de procesos (10 pts) &
+Una gestión o interfaz no adecuado de procesos (5 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Cada proceso tiene una o más (ilimitada) cantidad de tareas &
+Interfaz gráfica permite la gestión adecuada de tareas (5 pts) &
+Una gestión o interfaz no adecuado de tareas (3 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Las tareas poseen un orden de ejecución dentro del proceso &
+Interfaz gráfica permite la gestión adecuada de procesos (5 pts) &
+Una gestión o interfaz no adecuado de procesos (3 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Cada tarea procesa un producto durante un tiempo determinado y posee una cola de espera de atención &
+Interfaz gráfica permite la gestión adecuada de tareas (5 pts) &
+Una gestión o interfaz no adecuado de tareas (3 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Todos los productos se ``mueven'' ordenadamente cada vez que una tarea finaliza de procesar un producto &
+Interfaz gráfica permite la gestión adecuada de productos (5 pts) &
+Una gestión o interfaz no adecuado de productos (3 pts) &
+Problemas de gestión o de interfaz (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Interfaz del usuario agradable &
+Interfaz con las mejores prácticas amigables al usuario (5 pts) &
+Algunos problemas de diseño de las interfaces (3 pts) &
+Interfaz desordenada, no funcional o con problemas (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Reportería o información detallada del proceso adecuada &
+Reportería acorde con lo solicitado (5 pts) &
+Reportería con algunas falencias de acuerdo con lo solicitado (3 pts) &
+Reportería desordenada, o incompleta (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Posibilidad de ``Pausar'' la ejecución e impresión de estatus de la línea de procesamiento &
+Permite pausar la ejecución y muestra la impresión del estatus de la línea de proceso (5 pts) &
+Pausa, pero la impresión es incompleta (3 pts) &
+Problemas con la Pausa y la impresión de datos (2 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+Documentación &
+Muy adecuada documentación de acuerdo con los requerimientos dados (15 pts) &
+Falta de orden, o documentación con alguna falencia (10 pts) &
+Documentación desordenada y con errores (5 pts) &
+No se evidencia la entrega (0 pts) \\
+\hline
+\end{longtable}
+
+\end{document}
