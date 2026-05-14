@@ -19,6 +19,10 @@ Ejecución desde la raíz del repositorio:
 
 from __future__ import annotations
 
+import sys as _sys
+import os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Optional
@@ -41,7 +45,7 @@ BG_INPUT = "#161b26"         # campos de texto
 # Texto
 TEXT_PRIMARY = "#e8eaed"     # texto principal
 TEXT_SECONDARY = "#9aa0a6"   # texto secundario / labels
-TEXT_MUTED = "#5f6368"       # texto muy tenue
+TEXT_MUTED = "#8a9099"       # texto tenue (contraste mínimo 3:1 sobre BG_CARD)
 TEXT_ACCENT = "#8ab4f8"      # links / destacados
 
 # Acentos
@@ -75,15 +79,15 @@ PROC_FINAL = "#f87171"       # rojo
 PROC_MIDDLE = "#4f8cff"      # azul
 
 # Tipografía
-FONT_FAMILY = "Helvetica Neue"     # Mac. Fallback automático si no existe.
+FONT_FAMILY = "DejaVu Sans"
 FONT_DISPLAY = (FONT_FAMILY, 28, "bold")
 FONT_TITLE = (FONT_FAMILY, 14, "bold")
 FONT_SUBTITLE = (FONT_FAMILY, 11, "bold")
 FONT_BODY = (FONT_FAMILY, 10)
 FONT_BODY_BOLD = (FONT_FAMILY, 10, "bold")
 FONT_SMALL = (FONT_FAMILY, 9)
-FONT_TINY = (FONT_FAMILY, 8)
-FONT_MONO = ("SF Mono", 10)
+FONT_TINY = (FONT_FAMILY, 9)
+FONT_MONO = ("DejaVu Sans Mono", 10)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -194,8 +198,8 @@ class LinProdApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("LinProd · Simulador de Producción")
-        self.geometry("1280x780")
-        self.minsize(1100, 680)
+        self.geometry("1500x900")
+        self.minsize(1280, 760)
         self.configure(bg=BG_BASE)
 
         # ── Estado ─────────────────────────────────────────────────────────────
@@ -205,6 +209,14 @@ class LinProdApp(tk.Tk):
         self._cycle_ms: int = 500
         self._task_widgets: dict[str, dict] = {}
         self._pause_window: Optional[tk.Toplevel] = None
+        # Proceso en construcción (pendiente de confirmación)
+        self._pending_process: Optional[Process] = None
+        # Proceso confirmado que está siendo editado (agregar más tareas)
+        self._edit_target: Optional[Process] = None
+        # Mapa tree-item-id → Process para saber qué proceso seleccionó el usuario
+        self._tree_item_to_proc: dict[str, Process] = {}
+        # Modo de ejecución: "auto" corre el timer, "step" espera clic manual
+        self._mode_var: tk.StringVar = tk.StringVar(value="auto")
 
         # ── Estilos ttk (solo para los pocos widgets ttk que usamos) ───────────
         self._setup_ttk_styles()
@@ -320,7 +332,7 @@ class LinProdApp(tk.Tk):
         main.pack(side="top", fill="both", expand=True, padx=20, pady=(0, 12))
 
         # Columna izquierda (configuración)
-        left = tk.Frame(main, bg=BG_BASE, width=320)
+        left = tk.Frame(main, bg=BG_BASE, width=350)
         left.pack(side="left", fill="y", padx=(0, 12))
         left.pack_propagate(False)
 
@@ -341,7 +353,7 @@ class LinProdApp(tk.Tk):
         card.pack(side="top", fill="x", pady=(0, 12))
 
         # ── Sección: Proceso ──────────────────────────────────────────────────
-        self._label_section(card.body, "PROCESO")
+        self._label_section(card.body, "1 · NUEVO PROCESO")
 
         tk.Label(card.body, text="Nombre", bg=BG_CARD, fg=TEXT_SECONDARY,
                  font=FONT_SMALL).pack(anchor="w", pady=(4, 2))
@@ -357,14 +369,21 @@ class LinProdApp(tk.Tk):
         ttk.Checkbutton(check_row, text="Final", style="Modern.TCheckbutton",
                         variable=self._var_is_final).pack(side="left")
 
-        ModernButton(card.body, text="+  Agregar proceso", variant="secondary",
-                     command=self._add_process).pack(fill="x", pady=(0, 10))
+        ModernButton(card.body, text="+  Crear proceso", variant="secondary",
+                     command=self._add_process).pack(fill="x", pady=(0, 4))
 
         # Separador
         tk.Frame(card.body, bg="#2d3548", height=1).pack(fill="x", pady=8)
 
         # ── Sección: Tarea ────────────────────────────────────────────────────
-        self._label_section(card.body, "TAREA · se agrega al último proceso")
+        # Label dinámica — se actualiza con el proceso activo
+        self._lbl_task_section = tk.Label(
+            card.body,
+            text="2 · TAREAS  (cree primero un proceso)",
+            bg=BG_CARD, fg=TEXT_MUTED,
+            font=(FONT_FAMILY, 9, "bold"), anchor="w"
+        )
+        self._lbl_task_section.pack(anchor="w")
 
         tk.Label(card.body, text="Nombre", bg=BG_CARD, fg=TEXT_SECONDARY,
                  font=FONT_SMALL).pack(anchor="w", pady=(4, 2))
@@ -378,24 +397,37 @@ class LinProdApp(tk.Tk):
         self._entry_task_time.pack(fill="x", ipady=6, pady=(0, 8))
 
         ModernButton(card.body, text="+  Agregar tarea", variant="secondary",
-                     command=self._add_task).pack(fill="x", pady=(0, 10))
+                     command=self._add_task).pack(fill="x", pady=(0, 6))
+
+        # Botón confirmar proceso (verde, prominente)
+        self._btn_confirm_proc = ModernButton(
+            card.body,
+            text="✓  Confirmar proceso (requiere ≥1 tarea)",
+            variant="success",
+            command=self._confirm_process,
+        )
+        self._btn_confirm_proc.pack(fill="x", pady=(0, 4))
+        self._btn_confirm_proc.set_enabled(False)
 
         # Separador
         tk.Frame(card.body, bg="#2d3548", height=1).pack(fill="x", pady=8)
 
         # ── Sección: Cantidad de productos ────────────────────────────────────
-        self._label_section(card.body, "PRODUCTOS A SIMULAR")
+        self._label_section(card.body, "3 · PRODUCTOS A SIMULAR")
         self._entry_n_products = ModernEntry(card.body)
         self._entry_n_products.insert(0, "5")
         self._entry_n_products.pack(fill="x", ipady=6, pady=(4, 10))
 
-        ModernButton(card.body, text="🗑  Limpiar línea", variant="danger",
+        ModernButton(card.body, text="★  Cargar demo", variant="warning",
+                     command=self._load_demo).pack(fill="x", pady=(0, 6))
+
+        ModernButton(card.body, text="×  Limpiar línea", variant="danger",
                      command=self._clear_line).pack(fill="x")
 
     def _label_section(self, parent: tk.Widget, text: str) -> None:
         """Etiqueta tipo 'header' pequeña en mayúsculas."""
         tk.Label(parent, text=text, bg=BG_CARD, fg=TEXT_MUTED,
-                 font=(FONT_FAMILY, 8, "bold")).pack(anchor="w")
+                 font=(FONT_FAMILY, 9, "bold")).pack(anchor="w")
 
     def _build_line_tree_card(self, parent: tk.Widget) -> None:
         """Tarjeta con el árbol de la línea construida."""
@@ -418,6 +450,23 @@ class LinProdApp(tk.Tk):
         self._tree.configure(yscrollcommand=vs.set)
         self._tree.pack(side="left", fill="both", expand=True)
         vs.pack(side="right", fill="y")
+
+        # Botonera de edición bajo el árbol
+        edit_bar = tk.Frame(card.body, bg=BG_CARD)
+        edit_bar.pack(side="top", fill="x", pady=(8, 0))
+
+        self._btn_edit_proc = ModernButton(
+            edit_bar, text="✎  Editar proceso seleccionado",
+            variant="secondary", command=self._on_edit_selected,
+        )
+        self._btn_edit_proc.pack(side="left", padx=(0, 6), fill="x", expand=True)
+
+        self._btn_cancel_edit = ModernButton(
+            edit_bar, text="✕  Cancelar edición",
+            variant="warning", command=self._cancel_edit,
+        )
+        self._btn_cancel_edit.pack(side="left", fill="x", expand=True)
+        self._btn_cancel_edit.set_enabled(False)
 
     def _build_metrics_row(self, parent: tk.Widget) -> None:
         """Fila superior del panel derecho: 4 tarjetas de métricas."""
@@ -515,11 +564,45 @@ class LinProdApp(tk.Tk):
                  font=FONT_BODY).pack()
 
     def _build_controls_card(self, parent: tk.Widget) -> None:
-        """Tarjeta con la botonera y el slider de velocidad."""
+        """Tarjeta con modo de ejecución, botonera y slider de velocidad."""
         card = Card(parent, padding=14)
         card.pack(side="top", fill="x")
 
-        # Botonera
+        # ── Fila 1: Modo de ejecución ─────────────────────────────────────────
+        mode_row = tk.Frame(card.body, bg=BG_CARD)
+        mode_row.pack(side="top", fill="x", pady=(0, 10))
+
+        tk.Label(mode_row, text="MODO DE EJECUCIÓN:", bg=BG_CARD, fg=TEXT_MUTED,
+                 font=(FONT_FAMILY, 9, "bold")).pack(side="left", padx=(0, 14))
+
+        # Radio-buttons estilizados (indicatoron=False → aspecto de botón toggle)
+        rb_style = dict(
+            bg=BG_CARD, activebackground=BG_CARD_HOVER,
+            selectcolor=ACCENT_PRIMARY,
+            fg=TEXT_PRIMARY, activeforeground=TEXT_PRIMARY,
+            font=FONT_BODY_BOLD, indicatoron=False,
+            padx=14, pady=7, cursor="hand2", relief="flat",
+            variable=self._mode_var, command=self._on_mode_change,
+        )
+        self._rb_auto = tk.Radiobutton(mode_row, text="▶▶  Automático",
+                                        value="auto", **rb_style)
+        self._rb_step = tk.Radiobutton(mode_row, text="▶|  Por ciclos (manual)",
+                                        value="step", **rb_style)
+        self._rb_auto.pack(side="left", padx=(0, 6))
+        self._rb_step.pack(side="left")
+
+        # Descripción dinámica del modo
+        self._lbl_mode_hint = tk.Label(
+            mode_row,
+            text="  La simulación avanza sola ciclo a ciclo",
+            bg=BG_CARD, fg=TEXT_SECONDARY, font=FONT_SMALL,
+        )
+        self._lbl_mode_hint.pack(side="left", padx=(16, 0))
+
+        # Separador fino
+        tk.Frame(card.body, bg="#2d3548", height=1).pack(fill="x", pady=(0, 10))
+
+        # ── Fila 2: Botonera ──────────────────────────────────────────────────
         btns = tk.Frame(card.body, bg=BG_CARD)
         btns.pack(side="top", fill="x")
 
@@ -527,7 +610,7 @@ class LinProdApp(tk.Tk):
                                         command=self._on_start)
         self._btn_start.pack(side="left", padx=(0, 6))
 
-        self._btn_pause = ModernButton(btns, text="⏸  Pausar", variant="warning",
+        self._btn_pause = ModernButton(btns, text="||  Pausar", variant="warning",
                                         command=self._on_pause)
         self._btn_pause.pack(side="left", padx=6)
 
@@ -535,24 +618,30 @@ class LinProdApp(tk.Tk):
                                          command=self._on_resume)
         self._btn_resume.pack(side="left", padx=6)
 
-        self._btn_step = ModernButton(btns, text="⏭  Paso", variant="secondary",
+        self._btn_step = ModernButton(btns, text="▶|  Siguiente ciclo",
+                                       variant="secondary",
                                        command=self._on_step)
         self._btn_step.pack(side="left", padx=6)
 
-        self._btn_reset = ModernButton(btns, text="↺  Reiniciar", variant="secondary",
+        self._btn_reset = ModernButton(btns, text="↺  Reiniciar sim", variant="secondary",
                                         command=self._on_reset)
         self._btn_reset.pack(side="left", padx=6)
 
-        self._btn_report = ModernButton(btns, text="📊  Estadísticas",
+        self._btn_report = ModernButton(btns, text="=  Estadísticas",
                                          variant="secondary",
                                          command=self._on_show_stats)
         self._btn_report.pack(side="left", padx=6)
 
-        # Slider de velocidad
+        self._btn_full_reset = ModernButton(btns, text="⊗  Reset total",
+                                             variant="danger",
+                                             command=self._full_reset)
+        self._btn_full_reset.pack(side="left", padx=(18, 0))
+
+        # ── Fila 3: Slider de velocidad (solo relevante en modo auto) ─────────
         speed = tk.Frame(card.body, bg=BG_CARD)
         speed.pack(side="top", fill="x", pady=(12, 0))
-        tk.Label(speed, text="VELOCIDAD", bg=BG_CARD, fg=TEXT_MUTED,
-                 font=(FONT_FAMILY, 8, "bold")).pack(side="left")
+        tk.Label(speed, text="VELOCIDAD (modo auto)", bg=BG_CARD, fg=TEXT_MUTED,
+                 font=(FONT_FAMILY, 9, "bold")).pack(side="left")
         self._lbl_speed = tk.Label(speed, text=f"{self._cycle_ms} ms/ciclo",
                                     bg=BG_CARD, fg=TEXT_PRIMARY,
                                     font=FONT_BODY_BOLD)
@@ -573,6 +662,15 @@ class LinProdApp(tk.Tk):
                                    "Detenga o reinicie la simulación antes de modificar la línea.")
             return
 
+        # No se puede crear otro proceso mientras haya uno pendiente de confirmar
+        if self._pending_process is not None:
+            messagebox.showerror(
+                "Proceso pendiente",
+                f"El proceso '{self._pending_process.name}' aún no ha sido confirmado.\n"
+                "Agréguele al menos una tarea y pulse '✓ Confirmar proceso' antes de continuar."
+            )
+            return
+
         name = self._entry_proc_name.get().strip()
         if not name:
             messagebox.showwarning("Dato faltante", "Ingrese el nombre del proceso.")
@@ -581,27 +679,115 @@ class LinProdApp(tk.Tk):
         is_initial = self._var_is_initial.get()
         is_final = self._var_is_final.get()
 
-        if self._line is None:
-            self._line = ProductionLine()
-
-        if is_initial and self._line.initial_process is not None:
+        # Verificar unicidad de inicial/final contra la línea ya confirmada
+        line = self._line
+        if is_initial and line is not None and line.initial_process is not None:
             messagebox.showerror("Solo un proceso inicial",
-                                 f"Ya existe un proceso inicial: '{self._line.initial_process.name}'.")
+                                 f"Ya existe un proceso inicial: '{line.initial_process.name}'.")
             return
-        if is_final and self._line.final_process is not None:
+        if is_final and line is not None and line.final_process is not None:
             messagebox.showerror("Solo un proceso final",
-                                 f"Ya existe un proceso final: '{self._line.final_process.name}'.")
+                                 f"Ya existe un proceso final: '{line.final_process.name}'.")
             return
 
-        proc = Process(name=name, is_initial=is_initial, is_final=is_final)
-        self._line.add_process(proc)
+        # Crear proceso pendiente; cancelar cualquier edición activa
+        self._edit_target = None
+        self._btn_cancel_edit.set_enabled(False)
+        self._pending_process = Process(name=name, is_initial=is_initial, is_final=is_final)
 
         self._entry_proc_name.delete(0, "end")
         self._var_is_initial.set(False)
         self._var_is_final.set(False)
 
         self._refresh_line_tree()
-        self._set_status(f"Proceso '{name}' agregado", ACCENT_SUCCESS)
+        self._refresh_task_label()
+        self._btn_confirm_proc.set_enabled(False)   # aún sin tareas
+        self._set_status(
+            f"Proceso '{name}' creado — agréguele tareas y confirme", ACCENT_WARNING
+        )
+
+    def _confirm_process(self) -> None:
+        """Mueve el proceso pendiente a la línea confirmada (requiere ≥1 tarea)."""
+        if self._pending_process is None:
+            return
+        if self._pending_process.task_count == 0:
+            messagebox.showerror(
+                "Sin tareas",
+                f"El proceso '{self._pending_process.name}' necesita al menos una tarea\n"
+                "antes de poder ser confirmado."
+            )
+            return
+        if self._line is None:
+            self._line = ProductionLine()
+        self._line.add_process(self._pending_process)
+        name = self._pending_process.name
+        self._pending_process = None
+        self._btn_confirm_proc.set_enabled(False)
+        self._refresh_line_tree()
+        self._refresh_task_label()
+        self._set_status(f"Proceso '{name}' confirmado y añadido a la línea", ACCENT_SUCCESS)
+
+    def _refresh_task_label(self) -> None:
+        """Actualiza la etiqueta de la sección de tareas con el proceso activo."""
+        if self._pending_process is not None:
+            self._lbl_task_section.config(
+                text=f"2 · TAREAS  →  '{self._pending_process.name}' (pendiente)",
+                fg=ACCENT_WARNING,
+            )
+        elif self._edit_target is not None:
+            self._lbl_task_section.config(
+                text=f"2 · TAREAS  →  '{self._edit_target.name}' (editando)",
+                fg=ACCENT_PRIMARY,
+            )
+        elif self._line is not None and self._line.processes:
+            last = self._line.processes[-1]
+            self._lbl_task_section.config(
+                text=f"2 · TAREAS  →  '{last.name}' (último confirmado)",
+                fg=TEXT_MUTED,
+            )
+        else:
+            self._lbl_task_section.config(
+                text="2 · TAREAS  (cree primero un proceso)",
+                fg=TEXT_MUTED,
+            )
+
+    def _on_edit_selected(self) -> None:
+        """Activa el modo edición para el proceso seleccionado en el árbol."""
+        if self._sim_running():
+            messagebox.showwarning("Simulación activa",
+                                   "Detenga la simulación antes de editar la línea.")
+            return
+        if self._pending_process is not None:
+            messagebox.showerror(
+                "Proceso pendiente",
+                f"Confirme primero el proceso '{self._pending_process.name}' "
+                "antes de editar otro."
+            )
+            return
+        sel = self._tree.selection()
+        if not sel:
+            messagebox.showwarning("Sin selección",
+                                   "Seleccione un proceso en el árbol para editarlo.")
+            return
+        proc = self._tree_item_to_proc.get(sel[0])
+        if proc is None:
+            messagebox.showinfo("Selección inválida",
+                                "Seleccione un proceso (no una tarea individual).")
+            return
+        self._edit_target = proc
+        self._btn_cancel_edit.set_enabled(True)
+        self._refresh_line_tree()
+        self._refresh_task_label()
+        self._set_status(f"Editando '{proc.name}' — agregue tareas y pulse Cancelar edición al terminar",
+                         ACCENT_PRIMARY)
+
+    def _cancel_edit(self) -> None:
+        """Desactiva el modo edición."""
+        self._edit_target = None
+        self._btn_cancel_edit.set_enabled(False)
+        self._refresh_line_tree()
+        self._refresh_task_label()
+        self._set_status("Edición finalizada", ACCENT_SUCCESS)
 
     def _add_task(self) -> None:
         if self._sim_running():
@@ -609,8 +795,18 @@ class LinProdApp(tk.Tk):
                                    "Detenga o reinicie la simulación antes de modificar la línea.")
             return
 
-        if self._line is None or not self._line.processes:
-            messagebox.showwarning("Sin proceso", "Cree primero un proceso.")
+        # Prioridad: pendiente > en edición > último confirmado
+        if self._pending_process is not None:
+            target = self._pending_process
+        elif self._edit_target is not None:
+            target = self._edit_target
+        elif self._line is not None and self._line.processes:
+            target = self._line.processes[-1]
+        else:
+            messagebox.showwarning(
+                "Sin proceso",
+                "Cree primero un proceso antes de agregar tareas."
+            )
             return
 
         name = self._entry_task_name.get().strip()
@@ -627,49 +823,118 @@ class LinProdApp(tk.Tk):
                                  "El tiempo debe ser un entero mayor a 0.")
             return
 
-        last_process = self._line.processes[-1]
-        last_process.add_task(Task(name=name, process_time=t))
+        target.add_task(Task(name=name, process_time=t))
 
         self._entry_task_name.delete(0, "end")
         self._entry_task_time.delete(0, "end")
 
+        # Habilitar confirmar si el destino era el proceso pendiente
+        if self._pending_process is not None:
+            self._btn_confirm_proc.set_enabled(True)
+
         self._refresh_line_tree()
-        self._set_status(f"Tarea '{name}' agregada a '{last_process.name}'", ACCENT_SUCCESS)
+        self._set_status(f"Tarea '{name}' agregada a '{target.name}'", ACCENT_SUCCESS)
 
     def _clear_line(self) -> None:
         if self._sim_running():
             messagebox.showwarning("Simulación activa",
                                    "Detenga o reinicie la simulación antes de modificar la línea.")
             return
-        if self._line is None or not self._line.processes:
+        if self._line is None and self._pending_process is None:
             return
         if not messagebox.askyesno("Confirmar",
-                                   "¿Borrar TODA la línea (procesos y tareas)?"):
+                                   "¿Borrar TODA la línea (procesos, tareas y proceso pendiente)?"):
             return
         self._line = None
+        self._pending_process = None
+        self._edit_target = None
+        self._btn_confirm_proc.set_enabled(False)
+        self._btn_cancel_edit.set_enabled(False)
         self._refresh_line_tree()
+        self._refresh_task_label()
         self._set_status("Línea limpiada", ACCENT_WARNING)
+
+    def _load_demo(self) -> None:
+        if self._sim_running():
+            messagebox.showwarning("Simulación activa",
+                                   "Detenga o reinicie la simulación antes de cargar el demo.")
+            return
+        if self._line is not None and self._line.processes:
+            if not messagebox.askyesno("Confirmar",
+                                       "Se reemplazará la línea actual con el demo. ¿Continuar?"):
+                return
+
+        demo = ProductionLine()
+        demo_data = [
+            ("Corte",    True,  False, [("Corte láser", 2), ("Pulido",      2)]),
+            ("Ensamble", False, False, [("Armado",       3), ("Soldadura",   4)]),
+            ("Pintura",  False, False, [("Imprimación",  2), ("Pintura",     3)]),
+            ("Revisión", False, False, [("Inspección",   2), ("Corrección",  1)]),
+            ("Empaque",  False, True,  [("Empacar",      2), ("Etiquetado",  1)]),
+        ]
+        for proc_name, is_initial, is_final, tasks in demo_data:
+            proc = Process(name=proc_name, is_initial=is_initial, is_final=is_final)
+            for task_name, t in tasks:
+                proc.add_task(Task(name=task_name, process_time=t))
+            demo.add_process(proc)
+
+        self._line = demo
+        self._pending_process = None
+        self._edit_target = None
+        self._btn_confirm_proc.set_enabled(False)
+        self._btn_cancel_edit.set_enabled(False)
+        self._entry_n_products.delete(0, "end")
+        self._entry_n_products.insert(0, "5")
+        self._refresh_line_tree()
+        self._refresh_task_label()
+        self._set_status("Demo cargado — 5 procesos × 2 tareas (cuello en Soldadura)", ACCENT_SUCCESS)
 
     def _refresh_line_tree(self) -> None:
         for item in self._tree.get_children():
             self._tree.delete(item)
-        if self._line is None or not self._line.processes:
+        self._tree_item_to_proc.clear()
+
+        has_content = (self._line is not None and self._line.processes) or \
+                      self._pending_process is not None
+        if not has_content:
             self._tree.insert("", "end", text="(línea vacía)", values=("—",))
             return
-        for proc in self._line.processes:
-            label = proc.name
+
+        if self._line is not None:
+            for proc in self._line.processes:
+                # Indicador visual extra si es el proceso en edición activa
+                editing = (self._edit_target is proc)
+                label = proc.name
+                tag = ""
+                if proc.is_initial:
+                    tag = "  INICIAL"
+                    label = "● " + label
+                elif proc.is_final:
+                    tag = "  FINAL"
+                    label = "● " + label
+                else:
+                    label = "○ " + label
+                if editing:
+                    label += "  ← EDITANDO"
+                proc_id = self._tree.insert("", "end", text=label + tag,
+                                            values=(f"{proc.task_count} tareas",), open=True)
+                self._tree_item_to_proc[proc_id] = proc
+                for task in proc.tasks:
+                    self._tree.insert(proc_id, "end", text="     " + task.name,
+                                      values=(f"t = {task.process_time}",))
+
+        # Proceso pendiente (aún sin confirmar)
+        if self._pending_process is not None:
+            p = self._pending_process
             tag = ""
-            if proc.is_initial:
+            if p.is_initial:
                 tag = "  INICIAL"
-                label = "● " + label
-            elif proc.is_final:
+            elif p.is_final:
                 tag = "  FINAL"
-                label = "● " + label
-            else:
-                label = "○ " + label
-            proc_id = self._tree.insert("", "end", text=label + tag,
-                                        values=(f"{proc.task_count} tareas",), open=True)
-            for task in proc.tasks:
+            label = f"◈ {p.name}{tag}  ← PENDIENTE"
+            proc_id = self._tree.insert("", "end", text=label,
+                                        values=(f"{p.task_count} tareas",), open=True)
+            for task in p.tasks:
                 self._tree.insert(proc_id, "end", text="     " + task.name,
                                   values=(f"t = {task.process_time}",))
 
@@ -677,9 +942,75 @@ class LinProdApp(tk.Tk):
     # Control de simulación
     # ══════════════════════════════════════════════════════════════════════════
 
+    def _check_initial_final(self) -> bool:
+        """
+        Verifica que el primer proceso sea INICIAL y el último sea FINAL.
+        Ofrece auto-corregirlo si el usuario acepta.
+        Retorna False si el usuario cancela o hay un conflicto no resolvible.
+        """
+        if self._line is None or not self._line.processes:
+            return True
+        procs = self._line.processes
+
+        # ── Verificar proceso inicial ──────────────────────────────────────
+        initials = [p for p in procs if p.is_initial]
+        if not initials:
+            resp = messagebox.askyesnocancel(
+                "Sin proceso INICIAL",
+                f"Ningún proceso está marcado como Inicial.\n\n"
+                f"El primer proceso de la línea es '{procs[0].name}'.\n"
+                f"¿Marcarlo automáticamente como Inicial?",
+            )
+            if resp is True:
+                procs[0].is_initial = True
+                self._refresh_line_tree()
+            elif resp is False:
+                messagebox.showinfo(
+                    "Corrija la configuración",
+                    "Edite la línea y marque un proceso como Inicial antes de iniciar."
+                )
+                return False
+            else:  # Cancel
+                return False
+        elif not procs[0].is_initial:
+            # Hay un inicial pero no es el primero — dejar que validate() lo atrape
+            pass
+
+        # ── Verificar proceso final ────────────────────────────────────────
+        finals = [p for p in procs if p.is_final]
+        if not finals:
+            resp = messagebox.askyesnocancel(
+                "Sin proceso FINAL",
+                f"Ningún proceso está marcado como Final.\n\n"
+                f"El último proceso de la línea es '{procs[-1].name}'.\n"
+                f"¿Marcarlo automáticamente como Final?",
+            )
+            if resp is True:
+                procs[-1].is_final = True
+                self._refresh_line_tree()
+            elif resp is False:
+                messagebox.showinfo(
+                    "Corrija la configuración",
+                    "Edite la línea y marque un proceso como Final antes de iniciar."
+                )
+                return False
+            else:
+                return False
+
+        return True
+
     def _on_start(self) -> None:
+        if self._pending_process is not None:
+            messagebox.showerror(
+                "Proceso sin confirmar",
+                f"El proceso '{self._pending_process.name}' aún está pendiente.\n"
+                "Confírmelo (con ≥1 tarea) antes de iniciar la simulación."
+            )
+            return
         if self._line is None:
             messagebox.showerror("Línea vacía", "Cree al menos un proceso con sus tareas.")
+            return
+        if not self._check_initial_final():
             return
         try:
             self._line.validate()
@@ -696,20 +1027,30 @@ class LinProdApp(tk.Tk):
                                  "La cantidad de productos debe ser un entero > 0.")
             return
 
-        self._sim = Simulator(self._line, n_products=n, on_pause=self._on_sim_pause)
+        self._sim = Simulator(self._line, n_products=n)
         self._sim.start()
 
         self._build_sim_view()
         self._refresh_ui(self._sim.snapshot())
         self._update_button_states()
-        self._set_status(f"Simulación iniciada con {n} productos", ACCENT_PRIMARY)
-        self._schedule_next_cycle()
+
+        mode = self._mode_var.get()
+        if mode == "auto":
+            self._set_status(f"Simulación iniciada con {n} productos — Modo automático",
+                             ACCENT_PRIMARY)
+            self._schedule_next_cycle()
+        else:
+            self._set_status(
+                f"Simulación iniciada con {n} productos — Modo ciclos: use '▶| Siguiente ciclo'",
+                ACCENT_WARNING,
+            )
 
     def _on_pause(self) -> None:
         if not self._sim or not self._sim.is_started or self._sim.is_paused:
             return
         self._cancel_timer()
         self._sim.pause()
+        self._show_pause_window(self._sim.snapshot())
         self._update_button_states()
         self._set_status(f"Pausada en ciclo {self._sim.current_cycle}", ACCENT_WARNING)
 
@@ -724,19 +1065,24 @@ class LinProdApp(tk.Tk):
     def _on_step(self) -> None:
         if not self._sim or not self._sim.is_started or self._sim.is_done:
             return
-        was_paused = self._sim.is_paused
-        if not was_paused:
-            self._cancel_timer()
-            self._sim.pause()
-        self._sim.resume()
-        self._sim.step()
+        if self._mode_var.get() == "auto":
+            # En modo auto: detener timer, hacer un paso y volver a pausar
+            was_paused = self._sim.is_paused
+            if not was_paused:
+                self._cancel_timer()
+                self._sim.pause()
+            self._sim.resume()
+            self._sim.step()
+            if not self._sim.is_done:
+                self._sim.pause()
+        else:
+            # En modo ciclos: avanzar directo sin jugar con el timer
+            self._sim.step()
         self._refresh_ui(self._sim.snapshot())
-        if not self._sim.is_done:
-            self._sim.pause()
         if self._sim.is_done:
             self._on_simulation_done()
         self._update_button_states()
-        self._set_status(f"Avanzado a ciclo {self._sim.current_cycle}", ACCENT_PRIMARY)
+        self._set_status(f"Ciclo {self._sim.current_cycle}", ACCENT_PRIMARY)
 
     def _on_reset(self) -> None:
         self._cancel_timer()
@@ -755,6 +1101,34 @@ class LinProdApp(tk.Tk):
             self._pause_window = None
         self._update_button_states()
         self._set_status("Listo", ACCENT_SUCCESS)
+
+    def _full_reset(self) -> None:
+        """Detiene la simulación Y borra la línea: todo vuelve al estado inicial."""
+        if not messagebox.askyesno("Reset total",
+                                   "¿Borrar la línea de producción y detener la simulación?\n"
+                                   "Todo comenzará desde cero."):
+            return
+        self._cancel_timer()
+        self._sim = None
+        self._line = None
+        self._pending_process = None
+        self._edit_target = None
+        self._task_widgets.clear()
+        self._show_empty_state()
+        self._metric_cycle._value_label.config(text="0")       # type: ignore
+        self._metric_done._value_label.config(text="0 / 0")    # type: ignore
+        self._metric_progress._value_label.config(text="0")    # type: ignore
+        self._progress_global["value"] = 0
+        self._lbl_progress_pct.config(text="0%")
+        if self._pause_window is not None and self._pause_window.winfo_exists():
+            self._pause_window.destroy()
+            self._pause_window = None
+        self._btn_confirm_proc.set_enabled(False)
+        self._btn_cancel_edit.set_enabled(False)
+        self._refresh_line_tree()
+        self._refresh_task_label()
+        self._update_button_states()
+        self._set_status("Reset total — línea y simulación borradas", ACCENT_DANGER)
 
     def _on_speed_change(self, value: str) -> None:
         try:
@@ -974,10 +1348,6 @@ class LinProdApp(tk.Tk):
     # Pausa / fin de simulación
     # ══════════════════════════════════════════════════════════════════════════
 
-    def _on_sim_pause(self, snap: dict) -> None:
-        self._refresh_ui(snap)
-        self._show_pause_window(snap)
-
     def _show_pause_window(self, snap: dict) -> None:
         if self._pause_window is not None and self._pause_window.winfo_exists():
             self._pause_window.destroy()
@@ -1170,13 +1540,41 @@ class LinProdApp(tk.Tk):
         started = (sim is not None) and sim.is_started
         paused = (sim is not None) and sim.is_paused
         done = (sim is not None) and sim.is_done
+        mode = self._mode_var.get()
 
         self._btn_start.set_enabled(no_sim or done)
-        self._btn_pause.set_enabled(started and not paused and not done)
-        self._btn_resume.set_enabled(paused and not done)
-        self._btn_step.set_enabled(started and not done)
+
+        if mode == "auto":
+            self._btn_pause.set_enabled(started and not paused and not done)
+            self._btn_resume.set_enabled(paused and not done)
+            # "Paso" en modo auto actúa como step forzado; habilitado solo si pausado o no corriendo
+            self._btn_step.set_enabled(started and not done)
+        else:
+            # Modo ciclos: Pausa/Reanudar no aplican; "Siguiente ciclo" es el control principal
+            self._btn_pause.set_enabled(False)
+            self._btn_resume.set_enabled(False)
+            self._btn_step.set_enabled(started and not done)
+
         self._btn_reset.set_enabled(started)
         self._btn_report.set_enabled(started)
+
+        # Bloquear cambio de modo mientras hay simulación activa
+        sim_active = started and not done
+        state = "disabled" if sim_active else "normal"
+        self._rb_auto.config(state=state)
+        self._rb_step.config(state=state)
+
+    def _on_mode_change(self) -> None:
+        mode = self._mode_var.get()
+        if mode == "auto":
+            self._lbl_mode_hint.config(
+                text="  La simulación avanza sola ciclo a ciclo"
+            )
+        else:
+            self._lbl_mode_hint.config(
+                text="  Usted controla cada ciclo pulsando '▶| Siguiente ciclo'"
+            )
+        self._update_button_states()
 
     def _set_status(self, msg: str, color: str = ACCENT_SUCCESS) -> None:
         self._status_pill.config(text=f"● {msg}", fg=color)
