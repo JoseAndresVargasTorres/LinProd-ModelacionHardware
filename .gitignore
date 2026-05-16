@@ -11,6 +11,10 @@ build/
 reporte_linprod*.pdf
 reporte_linprod_prueba.pdf
 
+# Archivos de configuración de Claude Code (uso interno, no del proyecto)
+CLAUDE.md
+COMMANDS.md
+
 # Archivos comprimidos y temporales
 *.zip
 githubrepositorio.txt
