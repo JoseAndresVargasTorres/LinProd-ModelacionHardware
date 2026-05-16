@@ -24,7 +24,7 @@ import os as _os
 _sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Optional
 
 from linprod.model import Process, ProductionLine, Task
@@ -636,6 +636,11 @@ class LinProdApp(tk.Tk):
                                              variant="danger",
                                              command=self._full_reset)
         self._btn_full_reset.pack(side="left", padx=(18, 0))
+
+        self._btn_pdf = ModernButton(btns, text="⬇  Generar PDF",
+                                     variant="secondary",
+                                     command=self._on_generate_pdf)
+        self._btn_pdf.pack(side="left", padx=(6, 0))
 
         # ── Fila 3: Slider de velocidad (solo relevante en modo auto) ─────────
         speed = tk.Frame(card.body, bg=BG_CARD)
@@ -1457,6 +1462,27 @@ class LinProdApp(tk.Tk):
             return
         self._show_stats_window(self._sim.get_stats())
 
+    def _on_generate_pdf(self) -> None:
+        if self._sim is None or not self._sim.is_started:
+            messagebox.showinfo("Sin datos",
+                                "Inicie y complete una simulación primero.")
+            return
+        stats = self._sim.get_stats()
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF", "*.pdf")],
+            initialfile="reporte_linprod.pdf",
+        )
+        if not path:
+            return
+        try:
+            from linprod.reports import generate_report
+            generate_report(stats, path)
+            messagebox.showinfo("PDF generado",
+                                f"Reporte guardado en:\n{path}")
+        except Exception as e:
+            messagebox.showerror("Error al generar PDF", str(e))
+
     def _show_stats_window(self, stats: dict) -> None:
         win = tk.Toplevel(self)
         win.title("Estadísticas de la simulación")
@@ -1557,6 +1583,7 @@ class LinProdApp(tk.Tk):
 
         self._btn_reset.set_enabled(started)
         self._btn_report.set_enabled(started)
+        self._btn_pdf.set_enabled(started)
 
         # Bloquear cambio de modo mientras hay simulación activa
         sim_active = started and not done

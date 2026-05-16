@@ -1,0 +1,729 @@
+\documentclass[12pt,letterpaper]{article}
+
+% ─── Paquetes ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+% ─── Colores ────────────────────────────────────────────────────────────────
+\definecolor{tecblue}{RGB}{0,70,127}
+\definecolor{tecred}{RGB}{200,0,0}
+\definecolor{codebg}{RGB}{28,35,52}
+\definecolor{codebg2}{RGB}{245,247,250}
+\definecolor{codeframe}{RGB}{100,120,160}
+\definecolor{keywordcolor}{RGB}{79,140,255}
+\definecolor{stringcolor}{RGB}{52,211,153}
+\definecolor{commentcolor}{RGB}{138,144,153}
+\definecolor{accentgreen}{RGB}{52,211,153}
+\definecolor{accentyellow}{RGB}{251,191,36}
+\definecolor{accentred}{RGB}{248,113,113}
+\definecolor{accentpurple}{RGB}{167,139,250}
+
+% ─── Encabezado / pie de página ─────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CE-5507 · LinProd}
+\fancyhead[R]{\small Guía de Implementación · Módulo 4}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Secciones ──────────────────────────────────────────────────────────────
+\titleformat{\section}{\bfseries\large\color{tecblue}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\bfseries\normalsize\color{tecblue!70}}{}{0em}{}
+\titleformat{\subsubsection}{\bfseries\normalsize}{}{0em}{}
+
+% ─── Listings ───────────────────────────────────────────────────────────────
+\lstset{
+  language=Python,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small\color{white},
+  keywordstyle=\color{keywordcolor}\bfseries,
+  stringstyle=\color{stringcolor},
+  commentstyle=\color{commentcolor}\itshape,
+  numberstyle=\tiny\color{commentcolor},
+  numbers=left,
+  numbersep=10pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{codeframe},
+  tabsize=4,
+  xleftmargin=15pt,
+  xrightmargin=5pt,
+  aboveskip=10pt,
+  belowskip=10pt,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {ñ}{{\~n}}1 {Ñ}{{\~N}}1
+    {←}{{$\leftarrow$}}1 {→}{{$\rightarrow$}}1
+    {─}{{\textendash}}1 {—}{{\textemdash}}1,
+}
+
+% ─── Cajas especiales ───────────────────────────────────────────────────────
+\tcbset{
+  notebox/.style={
+    enhanced, breakable,
+    colback=tecblue!8,
+    colframe=tecblue,
+    fonttitle=\bfseries,
+    attach boxed title to top left={yshift=-2mm, xshift=6mm},
+    boxed title style={colback=tecblue, colframe=tecblue},
+    title={#1},
+  },
+  warnbox/.style={
+    enhanced,
+    colback=accentyellow!10,
+    colframe=accentyellow!80!black,
+    fonttitle=\bfseries,
+    attach boxed title to top left={yshift=-2mm, xshift=6mm},
+    boxed title style={colback=accentyellow!80!black},
+    title={#1},
+  },
+  tipbox/.style={
+    enhanced,
+    colback=accentgreen!8,
+    colframe=accentgreen!70!black,
+    fonttitle=\bfseries,
+    attach boxed title to top left={yshift=-2mm, xshift=6mm},
+    boxed title style={colback=accentgreen!70!black},
+    title={#1},
+  },
+}
+
+% ─── Checkmark ──────────────────────────────────────────────────────────────
+\newcommand{\cmark}{\textcolor{accentgreen}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{accentred}{\ding{55}}}
+
+% ─── Columna centrada ───────────────────────────────────────────────────────
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada ────────────────────────────────────────────────────────────────
+\begin{center}
+  {\large\bfseries Proyecto 2 — LinProd}\\[0.5em]
+  {\LARGE\bfseries\color{tecred} Guía de Implementación}\\[0.3em]
+  {\LARGE\bfseries\color{tecblue} Módulo 4: Reportería PDF}\\[1em]
+  \textit{Instituto Tecnológico de Costa Rica}\\
+  \textit{Escuela de Ingeniería en Computadores}\\
+  \textit{CE-5507 — Modelación Hardware Software Orientado a Objetos}\\
+  \textit{I Semestre 2026}\\[1em]
+  \textbf{Archivo a implementar:} \texttt{linprod/reports.py}
+\end{center}
+
+\vspace{0.5em}\hrule\vspace{1em}
+
+% ─── 1. Contexto ────────────────────────────────────────────────────────────
+\section{Contexto y rol del Módulo 4}
+
+LinProd está dividido en cuatro módulos con una cadena de dependencia estricta
+en un solo sentido:
+
+\vspace{0.5em}
+\begin{center}
+\texttt{model.py} $\longleftarrow$ \texttt{simulator.py} $\longleftarrow$
+\begin{tabular}{l}
+  \texttt{app.py}\\
+  \textbf{\texttt{reports.py} \textcolor{tecred}{$\longleftarrow$ tú aquí}}
+\end{tabular}
+\end{center}
+\vspace{0.5em}
+
+\textbf{Tu trabajo consiste únicamente en implementar \texttt{linprod/reports.py}}.
+No debes modificar ningún otro archivo. El módulo recibe los datos del simulador
+mediante la función \texttt{Simulator.get\_stats()} y genera un reporte en PDF
+usando la librería \texttt{reportlab}.
+
+\begin{tcolorbox}[notebox={Regla de oro}]
+  \texttt{reports.py} \textbf{solo importa de} \texttt{linprod.simulator}
+  (y por transitividad de \texttt{linprod.model}). No importa nada de
+  \texttt{app.py} ni de \texttt{tkinter}.
+\end{tcolorbox}
+
+% ─── 2. Instalación ─────────────────────────────────────────────────────────
+\section{Instalación de reportlab}
+
+\texttt{reportlab} es la única dependencia no-stdlib del proyecto.
+Para instalarla ejecuta en la terminal:
+
+\begin{lstlisting}[language=bash, numbers=none]
+pip install reportlab
+# o si el sistema usa pip3:
+pip3 install reportlab
+\end{lstlisting}
+
+Para verificar que quedó instalada correctamente:
+
+\begin{lstlisting}[language=bash, numbers=none]
+python3 -c "import reportlab; print(reportlab.Version)"
+# Salida esperada: algo como 4.x.x
+\end{lstlisting}
+
+% ─── 3. Datos de entrada ─────────────────────────────────────────────────────
+\section{Datos de entrada: \texttt{Simulator.get\_stats()}}
+
+La función \texttt{get\_stats()} del simulador es la \textbf{única fuente de datos}
+para el reporte. Retorna un diccionario con la siguiente estructura:
+
+\subsection{Claves del diccionario principal}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Clave} & \textbf{Tipo} & \textbf{Descripción} \\
+\hline
+\texttt{total\_cycles\_run} & \texttt{int} & Ciclos totales ejecutados hasta terminar \\
+\hline
+\texttt{products\_total} & \texttt{int} & Total de productos que entraron a la línea \\
+\hline
+\texttt{products\_completed} & \texttt{int} & Productos que completaron toda la línea \\
+\hline
+\texttt{first\_completion\_cycle} & \texttt{int|None} & Ciclo en que salió el primer producto \\
+\hline
+\texttt{last\_completion\_cycle} & \texttt{int|None} & Ciclo en que salió el último producto \\
+\hline
+\texttt{avg\_completion\_time} & \texttt{float} & Tiempo promedio de paso (ciclos) \\
+\hline
+\texttt{total\_processing\_time} & \texttt{int} & Suma de tiempos de todos los productos \\
+\hline
+\texttt{bottleneck\_task} & \texttt{str|None} & Nombre de la tarea cuello de botella \\
+\hline
+\texttt{bottleneck\_process} & \texttt{str|None} & Proceso al que pertenece el cuello de botella \\
+\hline
+\texttt{avg\_wait\_to\_start} & \texttt{float} & Espera promedio global antes de iniciar tarea \\
+\hline
+\texttt{worst\_wait\_task} & \texttt{str|None} & Tarea con mayor espera promedio \\
+\hline
+\texttt{worst\_wait\_process} & \texttt{str|None} & Proceso de la tarea con mayor espera \\
+\hline
+\texttt{worst\_wait\_value} & \texttt{float} & Valor de esa mayor espera (ciclos) \\
+\hline
+\texttt{task\_stats} & \texttt{list[dict]} & Estadísticas por tarea (ver \S3.2) \\
+\hline
+\texttt{product\_stats} & \texttt{list[dict]} & Estadísticas por producto (ver \S3.3) \\
+\hline
+\end{tabularx}
+\end{center}
+
+\subsection{Estructura de cada elemento en \texttt{task\_stats}}
+
+Cada elemento de la lista \texttt{task\_stats} es un diccionario con:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Clave} & \textbf{Tipo} & \textbf{Descripción} \\
+\hline
+\texttt{task\_name} & \texttt{str} & Nombre de la tarea \\
+\hline
+\texttt{process\_name} & \texttt{str} & Nombre del proceso al que pertenece \\
+\hline
+\texttt{process\_time} & \texttt{int} & Tiempo de procesamiento configurado (ciclos) \\
+\hline
+\texttt{products\_processed} & \texttt{int} & Cuántos productos procesó esta tarea \\
+\hline
+\texttt{avg\_wait\_cycles} & \texttt{float} & Espera promedio de productos en la cola \\
+\hline
+\texttt{busy} & \texttt{bool} & Si la tarea estaba ocupada al terminar \\
+\hline
+\end{tabularx}
+\end{center}
+
+\subsection{Estructura de cada elemento en \texttt{product\_stats}}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Clave} & \textbf{Tipo} & \textbf{Descripción} \\
+\hline
+\texttt{product\_id} & \texttt{int} & Identificador del producto (1, 2, 3...) \\
+\hline
+\texttt{entry\_time} & \texttt{int} & Ciclo en que entró a la línea \\
+\hline
+\texttt{exit\_time} & \texttt{int|None} & Ciclo en que salió (\texttt{None} si no terminó) \\
+\hline
+\texttt{is\_completed} & \texttt{bool} & Si completó toda la línea \\
+\hline
+\texttt{total\_time} & \texttt{int|None} & Ciclos totales de entrada a salida \\
+\hline
+\texttt{task\_history} & \texttt{list[dict]} & Historial de paso por cada tarea \\
+\hline
+\end{tabularx}
+\end{center}
+
+El historial de tareas (\texttt{task\_history}) de cada producto es una lista de
+diccionarios, uno por cada tarea que procesó. Cada entrada tiene:
+\texttt{task\_name}, \texttt{process\_name}, \texttt{start\_cycle},
+\texttt{end\_cycle}, \texttt{wait\_cycles}.
+
+% ─── 4. Qué debe contener el reporte ────────────────────────────────────────
+\section{Contenido mínimo del reporte (según el enunciado)}
+
+El enunciado del proyecto exige que el reporte presente los siguientes datos:
+
+\begin{enumerate}[leftmargin=2em]
+  \item[\cmark] Tiempo en que el \textbf{primer producto} logró terminar con
+    éxito toda la línea (\texttt{first\_completion\_cycle}).
+  \item[\cmark] Tiempo en que el \textbf{último producto} logró terminar con
+    éxito toda la línea (\texttt{last\_completion\_cycle}).
+  \item[\cmark] \textbf{Tiempo promedio} de paso por toda la línea
+    (\texttt{avg\_completion\_time}).
+  \item[\cmark] Proceso que generó el mayor \textbf{congestionamiento}
+    (\textbf{cuello de botella}: \texttt{bottleneck\_process} /
+    \texttt{bottleneck\_task}).
+  \item[\cmark] \textbf{Tiempo promedio de espera} de productos para iniciar
+    una tarea (\texttt{avg\_wait\_to\_start}).
+  \item[\cmark] Proceso y tarea con \textbf{mayor tiempo de espera}
+    (\texttt{worst\_wait\_process} / \texttt{worst\_wait\_task}).
+  \item[\cmark] \textbf{Tiempo total} del procesamiento de todos los productos
+    (\texttt{total\_processing\_time}).
+  \item[\cmark] Cualquier otra estadística que el grupo considere necesaria.
+\end{enumerate}
+
+Se recomienda adicionalmente incluir la \textbf{tabla de detalle por tarea}
+(\texttt{task\_stats}) y la \textbf{tabla de detalle por producto}
+(\texttt{product\_stats}).
+
+% ─── 5. Estructura del archivo ──────────────────────────────────────────────
+\section{Estructura recomendada de \texttt{reports.py}}
+
+\begin{lstlisting}
+"""
+reports.py — Módulo 4: Generación de reportes PDF
+Proyecto LinProd | CE-5507 | I Semestre 2026
+"""
+
+from __future__ import annotations
+from typing import Optional
+
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer,
+    Table, TableStyle, HRFlowable,
+)
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+
+def generate_report(stats: dict, output_path: str) -> None:
+    """
+    Genera el reporte PDF de la simulación.
+
+    Parámetros
+    ----------
+    stats : dict
+        Diccionario devuelto por Simulator.get_stats().
+    output_path : str
+        Ruta completa del archivo PDF a generar.
+        Ejemplo: "/home/usuario/reporte_linprod.pdf"
+    """
+    doc = SimpleDocTemplate(
+        output_path,
+        pagesize=letter,
+        leftMargin=2.5 * cm,
+        rightMargin=2.5 * cm,
+        topMargin=2.5 * cm,
+        bottomMargin=2.5 * cm,
+    )
+
+    story = []           # lista de elementos (flowables)
+    styles = _build_styles()
+
+    # 1. Portada / encabezado
+    _add_header(story, styles, stats)
+
+    # 2. Resumen general
+    _add_summary(story, styles, stats)
+
+    # 3. Cuello de botella y esperas
+    _add_bottleneck(story, styles, stats)
+
+    # 4. Tabla detalle por tarea
+    _add_task_table(story, styles, stats)
+
+    # 5. Tabla detalle por producto
+    _add_product_table(story, styles, stats)
+
+    doc.build(story)
+
+
+# ─── Helpers internos ────────────────────────────────────────────────────────
+
+def _build_styles() -> dict:
+    """Retorna un diccionario con los estilos de párrafo."""
+    base = getSampleStyleSheet()
+    return {
+        "title":    base["Title"],
+        "heading":  base["Heading2"],
+        "body":     base["Normal"],
+        "centered": ParagraphStyle(
+            "centered", parent=base["Normal"], alignment=TA_CENTER
+        ),
+    }
+\end{lstlisting}
+
+\begin{tcolorbox}[notebox={¿Por qué este diseño?}]
+  Dividir la generación en funciones privadas \texttt{\_add\_*} hace que el
+  código sea fácil de depurar: si una sección da error, sabes exactamente
+  dónde buscar.
+\end{tcolorbox}
+
+% ─── 6. Implementar cada sección ────────────────────────────────────────────
+\section{Implementar cada sección del reporte}
+
+\subsection{6.1 Encabezado y datos generales}
+
+\begin{lstlisting}
+def _add_header(story, styles, stats):
+    story.append(Paragraph("LinProd — Reporte de Simulación", styles["title"]))
+    story.append(HRFlowable(width="100%", thickness=1,
+                             color=colors.HexColor("#4f8cff")))
+    story.append(Spacer(1, 0.4 * cm))
+
+    resumen = [
+        ["Ciclos totales ejecutados:",
+         str(stats["total_cycles_run"])],
+        ["Productos en la línea:",
+         str(stats["products_total"])],
+        ["Productos completados:",
+         str(stats["products_completed"])],
+    ]
+    t = Table(resumen, colWidths=[9 * cm, 7 * cm])
+    t.setStyle(TableStyle([
+        ("FONT",      (0, 0), (-1, -1), "Helvetica"),
+        ("FONTSIZE",  (0, 0), (-1, -1), 11),
+        ("FONTNAME",  (0, 0), (0, -1),  "Helvetica-Bold"),
+        ("TEXTCOLOR", (0, 0), (0, -1),  colors.HexColor("#004680")),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 0.6 * cm))
+\end{lstlisting}
+
+\subsection{6.2 Resumen de tiempos}
+
+\begin{lstlisting}
+def _add_summary(story, styles, stats):
+    story.append(Paragraph("Resumen de Tiempos", styles["heading"]))
+    story.append(Spacer(1, 0.2 * cm))
+
+    def fmt(v):
+        return "—" if v is None else str(v)
+
+    data = [
+        ["Métrica", "Valor"],
+        ["Primer producto completado (ciclo)",
+         fmt(stats["first_completion_cycle"])],
+        ["Último producto completado (ciclo)",
+         fmt(stats["last_completion_cycle"])],
+        ["Tiempo promedio de paso",
+         f"{stats['avg_completion_time']:.2f} ciclos"],
+        ["Tiempo total de procesamiento",
+         f"{stats['total_processing_time']} ciclos"],
+        ["Espera promedio global",
+         f"{stats['avg_wait_to_start']:.2f} ciclos"],
+    ]
+
+    t = Table(data, colWidths=[10 * cm, 6 * cm])
+    t.setStyle(TableStyle([
+        # Encabezado
+        ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#004680")),
+        ("TEXTCOLOR",    (0, 0), (-1, 0), colors.white),
+        ("FONTNAME",     (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",     (0, 0), (-1, 0), 11),
+        # Cuerpo
+        ("FONTNAME",     (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE",     (0, 1), (-1, -1), 10),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+         [colors.HexColor("#f0f4ff"), colors.white]),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 0.6 * cm))
+\end{lstlisting}
+
+\subsection{6.3 Cuello de botella}
+
+\begin{lstlisting}
+def _add_bottleneck(story, styles, stats):
+    story.append(Paragraph("Cuello de Botella", styles["heading"]))
+    story.append(Spacer(1, 0.2 * cm))
+
+    bneck_proc = stats.get("bottleneck_process") or "—"
+    bneck_task = stats.get("bottleneck_task") or "—"
+    worst_val  = stats.get("worst_wait_value", 0.0)
+    worst_task = stats.get("worst_wait_task") or "—"
+
+    texto = (
+        f"El cuello de botella detectado es la tarea <b>{bneck_task}</b> "
+        f"del proceso <b>{bneck_proc}</b>, que registró la mayor "
+        f"espera promedio en cola ({worst_val:.2f} ciclos por producto)."
+    )
+    story.append(Paragraph(texto, styles["body"]))
+    story.append(Spacer(1, 0.6 * cm))
+\end{lstlisting}
+
+\subsection{6.4 Tabla de detalle por tarea}
+
+\begin{lstlisting}
+def _add_task_table(story, styles, stats):
+    story.append(Paragraph("Detalle por Tarea", styles["heading"]))
+    story.append(Spacer(1, 0.2 * cm))
+
+    encabezado = [["Proceso", "Tarea", "t (ciclos)",
+                   "Procesados", "Espera prom."]]
+    filas = []
+    for ts in stats["task_stats"]:
+        filas.append([
+            ts["process_name"],
+            ts["task_name"],
+            str(ts["process_time"]),
+            str(ts["products_processed"]),
+            f"{ts['avg_wait_cycles']:.2f}",
+        ])
+
+    data = encabezado + filas
+    col_w = [4*cm, 4*cm, 2.5*cm, 2.5*cm, 3*cm]
+    t = Table(data, colWidths=col_w)
+    t.setStyle(TableStyle([
+        ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#004680")),
+        ("TEXTCOLOR",    (0, 0), (-1, 0), colors.white),
+        ("FONTNAME",     (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME",     (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE",     (0, 0), (-1, -1), 9),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+         [colors.HexColor("#f0f4ff"), colors.white]),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("ALIGN",    (2, 0), (-1, -1), "CENTER"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING",    (0, 0), (-1, -1), 4),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 0.6 * cm))
+\end{lstlisting}
+
+\subsection{6.5 Tabla de detalle por producto}
+
+\begin{lstlisting}
+def _add_product_table(story, styles, stats):
+    story.append(Paragraph("Detalle por Producto", styles["heading"]))
+    story.append(Spacer(1, 0.2 * cm))
+
+    encabezado = [["Producto", "Entrada", "Salida",
+                   "Total (ciclos)", "Estado"]]
+    filas = []
+    for p in stats["product_stats"]:
+        filas.append([
+            f"P{p['product_id']}",
+            str(p["entry_time"]),
+            str(p["exit_time"]) if p["exit_time"] is not None else "—",
+            str(p["total_time"]) if p["total_time"] is not None else "—",
+            "Completado" if p["is_completed"] else "En proceso",
+        ])
+
+    data = encabezado + filas
+    col_w = [2.5*cm, 2.5*cm, 2.5*cm, 3.5*cm, 5*cm]
+    t = Table(data, colWidths=col_w)
+    t.setStyle(TableStyle([
+        ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#004680")),
+        ("TEXTCOLOR",    (0, 0), (-1, 0), colors.white),
+        ("FONTNAME",     (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME",     (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE",     (0, 0), (-1, -1), 9),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+         [colors.HexColor("#f0f4ff"), colors.white]),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("ALIGN",    (1, 0), (-1, -1), "CENTER"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING",    (0, 0), (-1, -1), 4),
+    ]))
+    story.append(t)
+\end{lstlisting}
+
+% ─── 7. Cómo integrarlo en la GUI ───────────────────────────────────────────
+\section{Integración con la GUI (\texttt{app.py})}
+
+El botón \textbf{«= Estadísticas»} ya existe en la barra de controles.
+Para agregar la generación de PDF hay que añadir un botón \textbf{«PDF»}
+en esa misma barra y conectarlo al siguiente handler:
+
+\begin{lstlisting}
+# En app.py, importar al inicio:
+from tkinter import filedialog
+from linprod.reports import generate_report
+
+# Handler del nuevo botón:
+def _on_generate_pdf(self) -> None:
+    if self._sim is None or not self._sim.is_started:
+        messagebox.showinfo("Sin datos",
+                            "Inicie y complete una simulación primero.")
+        return
+    stats = self._sim.get_stats()
+    path = filedialog.asksaveasfilename(
+        defaultextension=".pdf",
+        filetypes=[("PDF", "*.pdf")],
+        initialfile="reporte_linprod.pdf",
+    )
+    if not path:
+        return   # usuario canceló
+    try:
+        generate_report(stats, path)
+        messagebox.showinfo("PDF generado",
+                            f"Reporte guardado en:\n{path}")
+    except Exception as e:
+        messagebox.showerror("Error al generar PDF", str(e))
+\end{lstlisting}
+
+Y en \texttt{\_build\_controls\_card}, después del botón de estadísticas:
+
+\begin{lstlisting}
+self._btn_pdf = ModernButton(btns, text="PDF  Generar PDF",
+                             variant="secondary",
+                             command=self._on_generate_pdf)
+self._btn_pdf.pack(side="left", padx=6)
+\end{lstlisting}
+
+% ─── 8. Prueba sin GUI ──────────────────────────────────────────────────────
+\section{Prueba del reporte sin necesidad de la GUI}
+
+Para probar \texttt{reports.py} de forma independiente, sin abrir la interfaz
+gráfica, puedes agregar un bloque \texttt{if \_\_name\_\_ == "\_\_main\_\_":}
+al final del archivo:
+
+\begin{lstlisting}
+if __name__ == "__main__":
+    from linprod.model import Process, ProductionLine, Task
+    from linprod.simulator import Simulator
+
+    # Línea de prueba mínima
+    line = ProductionLine()
+
+    p1 = Process("Corte",   is_initial=True)
+    p1.add_task(Task("Corte láser", 2))
+    p1.add_task(Task("Pulido",      2))
+
+    p2 = Process("Ensamble")
+    p2.add_task(Task("Armado",    3))
+    p2.add_task(Task("Soldadura", 4))
+
+    p3 = Process("Empaque", is_final=True)
+    p3.add_task(Task("Empacar",    2))
+    p3.add_task(Task("Etiquetado", 1))
+
+    line.add_process(p1)
+    line.add_process(p2)
+    line.add_process(p3)
+
+    sim = Simulator(line, n_products=5)
+    sim.start()
+    sim.run()    # corre todos los ciclos hasta terminar
+
+    stats = sim.get_stats()
+    generate_report(stats, "reporte_prueba.pdf")
+    print("PDF generado: reporte_prueba.pdf")
+\end{lstlisting}
+
+Para ejecutarlo desde la raíz del repositorio:
+
+\begin{lstlisting}[language=bash, numbers=none]
+python3 -m linprod.reports
+\end{lstlisting}
+
+% ─── 9. Errores comunes ─────────────────────────────────────────────────────
+\section{Errores comunes y cómo resolverlos}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|p{5.5cm}|X|}
+\hline
+\textbf{Error} & \textbf{Solución} \\
+\hline
+\texttt{ModuleNotFoundError: reportlab} &
+Instalar con \texttt{pip3 install reportlab} \\
+\hline
+\texttt{PermissionError} al guardar el PDF &
+El archivo ya está abierto en el visor. Ciérralo antes de generarlo de nuevo. \\
+\hline
+\texttt{KeyError: 'alguna\_clave'} &
+Verificar que estás accediendo a la clave correcta del diccionario (revisar
+\S3 de esta guía). \\
+\hline
+Las tildes se ven como \texttt{?} en el PDF &
+Usar \texttt{pdfmetrics.registerFont} con una fuente TTF que soporte UTF-8,
+o evitar tildes en los textos generados. \\
+\hline
+Tabla cortada al final de la página &
+Usar \texttt{KeepTogether} para proteger tablas cortas, o \texttt{TableStyle}
+con \texttt{splitByRow=1} para las largas. \\
+\hline
+\end{tabularx}
+\end{center}
+
+\begin{tcolorbox}[tipbox={Consejo sobre tildes}]
+  La fuente por defecto de reportlab (\texttt{Helvetica}) no soporta tildes
+  directamente. La solución más sencilla es usar la fuente del sistema
+  \textbf{DejaVu} que sí soporta UTF-8:
+
+\begin{lstlisting}[numbers=none, aboveskip=4pt, belowskip=0pt]
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+pdfmetrics.registerFont(
+    TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+)
+# Después usas "DejaVu" como nombre de fuente en TableStyle/ParagraphStyle
+\end{lstlisting}
+\end{tcolorbox}
+
+% ─── 10. Lista de verificación ──────────────────────────────────────────────
+\section{Lista de verificación antes de la entrega}
+
+\begin{enumerate}[leftmargin=2em]
+  \item[\cmark] \texttt{reports.py} importa únicamente de \texttt{linprod.simulator},
+    \texttt{reportlab} y la stdlib. No toca \texttt{app.py}.
+  \item[\cmark] La función pública es \texttt{generate\_report(stats, output\_path)}.
+  \item[\cmark] El PDF incluye los 7 ítems obligatorios del enunciado (\S4).
+  \item[\cmark] Las tablas tienen encabezado con fondo de color para legibilidad.
+  \item[\cmark] Los valores \texttt{None} se muestran como ``—'' (no como la cadena
+    \texttt{"None"}).
+  \item[\cmark] El módulo puede ejecutarse de forma autónoma (\texttt{python3 -m linprod.reports})
+    para pruebas sin GUI.
+  \item[\cmark] Se probó con la línea demo de 5 procesos × 2 tareas × 5 productos.
+  \item[\xmark] \textbf{No} modificar \texttt{model.py}, \texttt{simulator.py} ni
+    \texttt{app.py} (salvo agregar el botón PDF indicado en \S7).
+\end{enumerate}
+
+% ─── Fin ────────────────────────────────────────────────────────────────────
+\vspace{1em}
+\hrule
+\vspace{0.5em}
+\begin{center}
+  \small
+  Proyecto 2 — LinProd \textbullet{}
+  CE-5507 Modelación Hardware/Software OO \textbullet{}
+  TEC, I Semestre 2026
+\end{center}
+
+\end{document}

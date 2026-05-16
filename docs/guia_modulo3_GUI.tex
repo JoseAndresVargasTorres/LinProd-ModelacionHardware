@@ -1,0 +1,772 @@
+\documentclass[12pt,letterpaper]{article}
+
+% ─── Paquetes ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+% ─── Colores ────────────────────────────────────────────────────────────────
+\definecolor{tecblue}{RGB}{0,70,127}
+\definecolor{tecred}{RGB}{200,0,0}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codeframe}{RGB}{180,180,180}
+\definecolor{keywordcolor}{RGB}{0,0,180}
+\definecolor{stringcolor}{RGB}{163,21,21}
+\definecolor{commentcolor}{RGB}{0,128,0}
+\definecolor{warnbg}{RGB}{255,249,230}
+\definecolor{warnframe}{RGB}{220,160,0}
+\definecolor{infobg}{RGB}{232,244,255}
+\definecolor{infoframe}{RGB}{0,100,200}
+
+% ─── Código fuente ──────────────────────────────────────────────────────────
+\lstset{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{keywordcolor}\bfseries,
+    stringstyle=\color{stringcolor},
+    commentstyle=\color{commentcolor}\itshape,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=6pt,
+    language=Python,
+    literate=
+        {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+        {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+        {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1,
+}
+
+% ─── Cajas de aviso ─────────────────────────────────────────────────────────
+\newtcolorbox{advertencia}{
+    colback=warnbg, colframe=warnframe,
+    fonttitle=\bfseries, title={\ding{72}~Advertencia},
+    breakable
+}
+\newtcolorbox{info}{
+    colback=infobg, colframe=infoframe,
+    fonttitle=\bfseries, title={\ding{229}~Nota},
+    breakable
+}
+
+% ─── Encabezado/pie de página ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CE-5507 Modelación Hardware/Software OO}
+\fancyhead[R]{\small Proyecto LinProd — Guía Módulo 3}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Secciones ──────────────────────────────────────────────────────────────
+\titleformat{\section}{\bfseries\large\color{tecblue}}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\bfseries\normalsize\color{tecblue}}{}{0em}{}
+\titleformat{\subsubsection}{\bfseries\normalsize}{}{0em}{}
+
+% ═══════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Portada ────────────────────────────────────────────────────────────────
+\begin{center}
+    {\Large\bfseries Proyecto LinProd}\\[0.4em]
+    {\LARGE\bfseries\color{tecred} Guía de Implementación — Módulo 3}\\[0.5em]
+    {\large\bfseries Interfaz Gráfica de Usuario (GUI)}\\[1em]
+    \textit{Instituto Tecnológico de Costa Rica}\\
+    \textit{CE-5507 Modelación Hardware/Software Orientado a Objetos}\\
+    \textit{I Semestre 2026}
+\end{center}
+
+\vspace{0.8em}
+\hrule
+\vspace{1em}
+
+\begin{info}
+Esta guía está dirigida a la persona encargada del \textbf{Módulo 3}. Los
+Módulos 1 y 2 ya están completamente implementados y probados; no debes
+modificarlos. Tu trabajo consiste exclusivamente en crear
+\texttt{linprod/gui/app.py} (y los archivos auxiliares que necesites dentro de
+\texttt{linprod/gui/}).
+\end{info}
+
+% ─── 1. Contexto general ────────────────────────────────────────────────────
+\section{Contexto general del proyecto}
+
+LinProd es un simulador de producción en serie por eventos discretos. El
+tiempo avanza en \textbf{ciclos}: en cada ciclo, cada tarea procesa un producto
+durante un ciclo de sus \texttt{process\_time} ciclos totales. Los productos
+fluyen de tarea en tarea dentro de un proceso, y de proceso en proceso a lo
+largo de la línea.
+
+\subsection{Arquitectura de módulos}
+
+\begin{center}
+\begin{tabular}{cl}
+    \toprule
+    Módulo & Responsabilidad \\
+    \midrule
+    1 & \texttt{linprod/model.py} — clases del dominio (\texttt{Product},
+        \texttt{Task}, \texttt{Process}, \texttt{ProductionLine}) \\
+    2 & \texttt{linprod/simulator.py} — motor de simulación (\texttt{Simulator}) \\
+    \textbf{3} & \textbf{\texttt{linprod/gui/app.py} — GUI (este módulo)} \\
+    4 & \texttt{linprod/reports.py} — generación de reportes PDF \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+La dependencia es unidireccional: el Módulo 3 \emph{importa} de los Módulos 1
+y 2, pero éstos no saben nada de la GUI. Nunca modifiques \texttt{model.py} ni
+\texttt{simulator.py}.
+
+\subsection{Tecnología}
+
+Usa \textbf{Tkinter} (incluido en Python). Si deseas mejor apariencia visual
+puedes usar \textbf{CustomTkinter} (\texttt{pip install customtkinter}), que es
+un wrapper moderno sobre Tkinter. La decisión es tuya, pero la GUI debe
+ejecutarse con Python 3.8+.
+
+% ─── 2. API de los módulos 1 y 2 ────────────────────────────────────────────
+\section{API que debes consumir}
+
+\subsection{Módulo 1 — Construcción de la línea}
+
+Para construir la línea de producción a partir de los datos que el usuario
+ingrese en la GUI:
+
+\begin{lstlisting}
+from linprod.model import Product, Task, Process, ProductionLine
+
+# Crear un proceso
+proceso = Process(name="Ensamblado", is_initial=True)
+
+# Agregar tareas al proceso
+proceso.add_task(Task(name="Colocar chasis", process_time=3))
+proceso.add_task(Task(name="Instalar motor", process_time=2))
+
+# Construir la linea (add_process enlaza automaticamente next_process)
+linea = ProductionLine()
+linea.add_process(proceso)
+# ... agregar mas procesos ...
+
+# Validar antes de simular (lanza ValueError si hay errores)
+linea.validate()
+\end{lstlisting}
+
+\subsubsection{Reglas de validación de \texttt{ProductionLine.validate()}}
+
+\begin{itemize}[leftmargin=2em]
+    \item Debe haber al menos un proceso.
+    \item Exactamente \textbf{un} proceso con \texttt{is\_initial=True}.
+    \item Exactamente \textbf{un} proceso con \texttt{is\_final=True}.
+    \item Cada proceso debe tener al menos una tarea.
+    \item El \texttt{process\_time} de cada tarea debe ser $> 0$.
+\end{itemize}
+
+Si \texttt{validate()} lanza \texttt{ValueError}, muestra el mensaje de error
+al usuario dentro de la GUI (no dejes que el programa explote sin aviso).
+
+\subsection{Módulo 2 — Control de la simulación}
+
+\begin{lstlisting}
+from linprod.simulator import Simulator
+
+# Crear el simulador (linea ya construida y validada)
+sim = Simulator(
+    line=linea,
+    n_products=5,           # cantidad de productos a simular
+    on_pause=mi_callback    # funcion que recibe un dict snapshot (opcional)
+)
+
+# Iniciar la simulacion (inyecta los productos en el proceso inicial)
+sim.start()
+
+# Avanzar UN ciclo (usar esto desde un timer de la GUI)
+sim.step()
+
+# Avanzar N ciclos de golpe (util para "run rapido")
+sim.run(n_cycles=100)
+
+# Pausar — devuelve snapshot y llama a on_pause si fue registrado
+snap = sim.pause()
+
+# Reanudar
+sim.resume()
+
+# Reiniciar (mantiene la misma linea, permite cambiar n_products)
+sim.reset()
+
+# Propiedades de solo lectura
+sim.current_cycle    # int: ciclo actual
+sim.is_started       # bool
+sim.is_paused        # bool
+sim.is_done          # bool: todos los productos completaron la linea
+
+# Estadisticas finales (para el Modulo 4, pero utiles en la GUI tambien)
+stats = sim.get_stats()
+\end{lstlisting}
+
+\subsection{Snapshot — estructura del diccionario}
+
+\texttt{sim.snapshot()} y el parámetro que recibe \texttt{on\_pause} tienen la
+siguiente estructura. Úsala para refrescar la GUI en cada ciclo.
+
+\begin{lstlisting}
+{
+  "cycle": 7,
+  "started": True,
+  "paused": False,
+  "is_done": False,
+  "products_total": 3,
+  "products_completed": 1,
+  "products_in_progress": 2,
+
+  "line": {
+    "process_count": 3,
+    "initial_process": "Ensamblado",
+    "final_process": "Control de calidad",
+    "processes": [
+      {
+        "process_name": "Ensamblado",
+        "is_initial": True,
+        "is_final": False,
+        "task_count": 2,
+        "is_done": False,
+        "next_process": "Pintura",
+        "tasks": [
+          {
+            "task_name": "Colocar chasis",
+            "process_name": "Ensamblado",
+            "process_time": 3,
+            "busy": True,
+            "current_product_id": 2,   # None si libre
+            "remaining_cycles": 1,
+            "queue_size": 1,
+            "queue_product_ids": [3],
+            "products_processed": 1,
+            "avg_wait_cycles": 3.0
+          },
+          # ... mas tareas
+        ]
+      },
+      # ... mas procesos
+    ]
+  },
+
+  "completed_products": [
+    {
+      "product_id": 1,
+      "entry_time": 0,
+      "exit_time": 12,
+      "is_completed": True,
+      "total_time": 12,
+      "task_history": [
+        {
+          "task_name": "Colocar chasis",
+          "process_name": "Ensamblado",
+          "start_cycle": 1,
+          "end_cycle": 3,
+          "wait_cycles": 0
+        },
+        # ... una entrada por cada tarea que el producto atraveso
+      ]
+    }
+  ],
+
+  "all_products": [ /* mismo formato que completed_products */ ]
+}
+\end{lstlisting}
+
+% ─── 3. Requerimientos funcionales de la GUI ────────────────────────────────
+\section{Requerimientos funcionales que debes cubrir}
+
+Los siguientes requerimientos provienen del enunciado del proyecto. Todos deben
+estar presentes en tu implementación.
+
+\subsection{Fase 1 — Configuración de la línea}
+
+\begin{enumerate}[leftmargin=2em]
+    \item El usuario puede \textbf{crear procesos} indicando: nombre, si es
+          inicial y si es final.
+    \item El usuario puede \textbf{agregar tareas} a cada proceso indicando:
+          nombre y \texttt{process\_time} (entero $> 0$).
+    \item Los procesos deben enlazarse en el orden en que fueron creados para
+          formar la línea (\texttt{ProductionLine.add\_process} lo hace
+          automáticamente).
+    \item El usuario debe poder \textbf{ver la estructura} de la línea que
+          está construyendo (lista de procesos con sus tareas).
+    \item El usuario debe poder indicar la \textbf{cantidad de productos}
+          (\texttt{n\_products}) antes de iniciar.
+    \item La GUI debe llamar a \texttt{validate()} antes de iniciar y mostrar
+          cualquier error de configuración al usuario de forma clara.
+\end{enumerate}
+
+\subsection{Fase 2 — Ejecución y visualización}
+
+\begin{enumerate}[leftmargin=2em]
+    \item Botón \textbf{Iniciar}: llama a \texttt{sim.start()} y arranca el
+          timer de ciclos.
+    \item El \textbf{avance} debe ser visible: la GUI debe actualizarse en
+          cada ciclo mostrando el estado de cada tarea (qué producto está
+          procesando, cuántos ciclos le restan, tamaño de la cola).
+    \item Botón \textbf{Pausar}: llama a \texttt{sim.pause()} y detiene el
+          timer. Muestra un ``snapshot'' detallado del estado en ese momento
+          (número de ciclo, estado de cada tarea, productos completados,
+          productos en proceso, productos en cola).
+    \item Botón \textbf{Reanudar}: llama a \texttt{sim.resume()} y retoma el
+          timer.
+    \item Botón \textbf{Reiniciar}: llama a \texttt{sim.reset()} y regresa a
+          la fase de configuración (o al inicio de la simulación con la misma
+          línea pero permitiendo cambiar \texttt{n\_products}).
+    \item Cuando la simulación termina (\texttt{sim.is\_done == True}), la GUI
+          debe notificarlo visualmente y ofrecer la opción de ver el reporte
+          (Módulo 4) o reiniciar.
+\end{enumerate}
+
+\subsection{Fase 3 — Efectos gráficos}
+
+El enunciado exige \emph{``efectos gráficos''}. Como mínimo debes incluir:
+
+\begin{itemize}[leftmargin=2em]
+    \item Indicador visual de que una tarea está \textbf{ocupada} vs.
+          \textbf{libre} (p.ej. cambio de color).
+    \item Barra de progreso o texto que muestre el avance
+          (\texttt{products\_completed / products\_total}).
+    \item Resaltar el cuello de botella cuando la simulación termina.
+\end{itemize}
+
+Puntos extra (no obligatorio, pero mejora la nota):
+
+\begin{itemize}[leftmargin=2em]
+    \item Animación de movimiento del producto entre tareas.
+    \item Uso de íconos o colores diferenciados por proceso.
+    \item Control de velocidad (ajustar el intervalo del timer).
+\end{itemize}
+
+% ─── 4. Implementación sugerida ─────────────────────────────────────────────
+\section{Guía de implementación paso a paso}
+
+\subsection{Paso 1 — Estructura de archivos}
+
+Crea los archivos dentro de \texttt{linprod/gui/}. El archivo principal es
+\texttt{app.py}; puedes añadir otros si los necesitas.
+
+\begin{lstlisting}[language=bash, numbers=none]
+linprod/
+  gui/
+    __init__.py   (ya existe, no tocar)
+    app.py        <- TU TRABAJO
+    widgets.py    (opcional: widgets reutilizables)
+\end{lstlisting}
+
+\subsection{Paso 2 — Esqueleto de la aplicación}
+
+\begin{lstlisting}
+import tkinter as tk
+from tkinter import ttk, messagebox
+from linprod.model import Task, Process, ProductionLine
+from linprod.simulator import Simulator
+
+
+class LinProdApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("LinProd — Simulador de Producción")
+        self.resizable(True, True)
+
+        # Estado de la aplicacion
+        self._line: ProductionLine | None = None
+        self._sim: Simulator | None = None
+        self._timer_id = None            # id del after() activo
+        self._cycle_ms = 500             # milisegundos entre ciclos
+
+        # Construir la UI
+        self._build_ui()
+
+    # ── Construccion de la interfaz ──────────────────────────────────────────
+
+    def _build_ui(self):
+        # Aqui creas los frames, botones, labels, etc.
+        pass
+
+    # ── Control de la simulacion ─────────────────────────────────────────────
+
+    def _on_start(self):
+        """Llama a sim.start() y arranca el timer."""
+        try:
+            self._line.validate()
+        except ValueError as e:
+            messagebox.showerror("Error de configuración", str(e))
+            return
+
+        n = int(self._entry_n_products.get())
+        self._sim = Simulator(self._line, n_products=n,
+                              on_pause=self._on_sim_pause)
+        self._sim.start()
+        self._schedule_next_cycle()
+
+    def _on_pause(self):
+        if self._sim and self._sim.is_started and not self._sim.is_paused:
+            if self._timer_id:
+                self.after_cancel(self._timer_id)
+                self._timer_id = None
+            self._sim.pause()   # invoca on_pause automaticamente
+
+    def _on_resume(self):
+        if self._sim and self._sim.is_paused:
+            self._sim.resume()
+            self._schedule_next_cycle()
+
+    def _on_reset(self):
+        if self._timer_id:
+            self.after_cancel(self._timer_id)
+            self._timer_id = None
+        if self._sim:
+            self._sim.reset()
+        # Regresar la GUI a estado inicial
+        self._refresh_ui(self._sim.snapshot() if self._sim else None)
+
+    # ── Loop de simulacion (timer Tkinter) ───────────────────────────────────
+
+    def _schedule_next_cycle(self):
+        """Programa el siguiente ciclo usando after()."""
+        self._timer_id = self.after(self._cycle_ms, self._tick)
+
+    def _tick(self):
+        """Avanza un ciclo y refresca la GUI."""
+        self._timer_id = None
+        if self._sim is None or self._sim.is_paused:
+            return
+
+        self._sim.step()
+        snap = self._sim.snapshot()
+        self._refresh_ui(snap)
+
+        if self._sim.is_done:
+            self._on_simulation_done()
+        else:
+            self._schedule_next_cycle()
+
+    # ── Refresco visual ──────────────────────────────────────────────────────
+
+    def _refresh_ui(self, snap: dict | None):
+        """Actualiza todos los widgets con los datos del snapshot."""
+        if snap is None:
+            return
+        # Recorre snap["line"]["processes"] y actualiza labels/colores
+        pass
+
+    def _on_sim_pause(self, snap: dict):
+        """Callback que llama el Simulator cuando se pausa."""
+        self._refresh_ui(snap)
+        # Mostrar ventana/panel de estado detallado
+        pass
+
+    def _on_simulation_done(self):
+        """Acciones al completar todos los productos."""
+        messagebox.showinfo(
+            "Simulación finalizada",
+            f"Todos los productos completaron la línea en "
+            f"{self._sim.current_cycle} ciclos."
+        )
+
+
+def main():
+    app = LinProdApp()
+    app.mainloop()
+
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\begin{info}
+El método clave para el loop de animación es \texttt{after()}. Nunca uses
+\texttt{time.sleep()} dentro de Tkinter porque bloquea la interfaz. Con
+\texttt{after(ms, funcion)} programas que Tkinter llame a \texttt{funcion}
+después de \texttt{ms} milisegundos sin bloquear nada.
+\end{info}
+
+\subsection{Paso 3 — Sección de configuración de la línea}
+
+Esta sección debe permitir al usuario construir la línea \textbf{antes} de
+iniciar la simulación. Una estructura sugerida:
+
+\begin{enumerate}[leftmargin=2em]
+    \item Un \texttt{Frame} izquierdo con el formulario para agregar
+          proceso/tarea.
+    \item Un \texttt{Listbox} o \texttt{Treeview} que muestre la estructura
+          actual de la línea.
+    \item Botones: \textbf{Agregar Proceso}, \textbf{Agregar Tarea},
+          \textbf{Eliminar} (opcional), \textbf{Limpiar línea}.
+\end{enumerate}
+
+\begin{lstlisting}
+def _build_config_frame(self, parent):
+    frame = ttk.LabelFrame(parent, text="Configuración de la línea")
+
+    # Nombre del proceso
+    ttk.Label(frame, text="Nombre del proceso:").grid(row=0, column=0)
+    self._entry_proc_name = ttk.Entry(frame)
+    self._entry_proc_name.grid(row=0, column=1)
+
+    # Checkboxes inicial / final
+    self._var_is_initial = tk.BooleanVar()
+    self._var_is_final   = tk.BooleanVar()
+    ttk.Checkbutton(frame, text="Inicial",
+                    variable=self._var_is_initial).grid(row=1, column=0)
+    ttk.Checkbutton(frame, text="Final",
+                    variable=self._var_is_final).grid(row=1, column=1)
+
+    ttk.Button(frame, text="+ Agregar proceso",
+               command=self._add_process).grid(row=2, column=0, columnspan=2)
+
+    # Separador
+    ttk.Separator(frame, orient="horizontal").grid(
+        row=3, column=0, columnspan=2, sticky="ew", pady=6)
+
+    # Nombre de la tarea y tiempo
+    ttk.Label(frame, text="Nombre de la tarea:").grid(row=4, column=0)
+    self._entry_task_name = ttk.Entry(frame)
+    self._entry_task_name.grid(row=4, column=1)
+
+    ttk.Label(frame, text="Tiempo de procesamiento:").grid(row=5, column=0)
+    self._entry_task_time = ttk.Entry(frame)
+    self._entry_task_time.grid(row=5, column=1)
+
+    ttk.Button(frame, text="+ Agregar tarea",
+               command=self._add_task).grid(row=6, column=0, columnspan=2)
+
+    return frame
+
+def _add_process(self):
+    name = self._entry_proc_name.get().strip()
+    if not name:
+        messagebox.showwarning("Dato faltante", "Ingrese el nombre del proceso.")
+        return
+    proc = Process(name,
+                   is_initial=self._var_is_initial.get(),
+                   is_final=self._var_is_final.get())
+    if self._line is None:
+        self._line = ProductionLine()
+    self._line.add_process(proc)
+    self._refresh_line_tree()
+
+def _add_task(self):
+    # Requiere que haya al menos un proceso creado
+    if self._line is None or not self._line.processes:
+        messagebox.showwarning("Sin proceso", "Cree primero un proceso.")
+        return
+    name = self._entry_task_name.get().strip()
+    try:
+        t = int(self._entry_task_time.get())
+        if t <= 0:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Valor inválido",
+                             "El tiempo debe ser un entero > 0.")
+        return
+    # La tarea se agrega al ULTIMO proceso creado
+    last_process = self._line.processes[-1]
+    last_process.add_task(Task(name, process_time=t))
+    self._refresh_line_tree()
+\end{lstlisting}
+
+\subsection{Paso 4 — Panel de visualización de la simulación}
+
+Para mostrar el estado de cada tarea en tiempo real, un \texttt{Treeview} o
+una cuadrícula de \texttt{Frame}/\texttt{Label} funciona bien. La clave es
+iterar sobre \texttt{snap["line"]["processes"]} en \texttt{\_refresh\_ui}.
+
+\begin{lstlisting}
+def _refresh_ui(self, snap: dict | None):
+    if snap is None:
+        return
+
+    self._lbl_cycle.config(text=f"Ciclo: {snap['cycle']}")
+    self._lbl_completed.config(
+        text=f"Completados: {snap['products_completed']} / "
+             f"{snap['products_total']}"
+    )
+
+    for proc_data in snap["line"]["processes"]:
+        for task_data in proc_data["tasks"]:
+            key = task_data["task_name"]
+            if key in self._task_widgets:
+                widget = self._task_widgets[key]
+                if task_data["busy"]:
+                    pid = task_data["current_product_id"]
+                    rem = task_data["remaining_cycles"]
+                    widget.config(
+                        text=f"P{pid} ({rem} ciclos restantes)",
+                        background="#ffcc66"   # amarillo = ocupada
+                    )
+                else:
+                    widget.config(
+                        text="Libre",
+                        background="#99dd99"   # verde = libre
+                    )
+\end{lstlisting}
+
+\subsection{Paso 5 — Control de velocidad (opcional pero recomendado)}
+
+Un \texttt{Scale} (slider) que modifique \texttt{\_cycle\_ms} permite al
+usuario acelerar o ralentizar la simulación:
+
+\begin{lstlisting}
+def _build_speed_control(self, parent):
+    ttk.Label(parent, text="Velocidad (ms/ciclo):").pack(side="left")
+    self._scale_speed = ttk.Scale(
+        parent, from_=50, to=2000,
+        orient="horizontal",
+        command=lambda v: setattr(self, "_cycle_ms", int(float(v)))
+    )
+    self._scale_speed.set(500)
+    self._scale_speed.pack(side="left", fill="x", expand=True)
+\end{lstlisting}
+
+\subsection{Paso 6 — Ventana de snapshot al pausar}
+
+Cuando el usuario pausa, el Simulator llama a \texttt{on\_pause(snap)}. Usa
+esa oportunidad para mostrar una ventana \texttt{Toplevel} con el detalle:
+
+\begin{lstlisting}
+def _on_sim_pause(self, snap: dict):
+    self._refresh_ui(snap)
+    win = tk.Toplevel(self)
+    win.title(f"Estado — Ciclo {snap['cycle']}")
+
+    text = tk.Text(win, width=60, height=30, font=("Courier", 10))
+    text.pack(fill="both", expand=True)
+
+    text.insert("end", f"=== SNAPSHOT — Ciclo {snap['cycle']} ===\n\n")
+    text.insert("end",
+        f"Productos completados : {snap['products_completed']}\n"
+        f"Productos en proceso  : {snap['products_in_progress']}\n\n"
+    )
+    for proc in snap["line"]["processes"]:
+        text.insert("end", f"Proceso: {proc['process_name']}\n")
+        for task in proc["tasks"]:
+            estado = (
+                f"procesando P{task['current_product_id']} "
+                f"({task['remaining_cycles']} ciclos restantes)"
+                if task["busy"] else "LIBRE"
+            )
+            text.insert("end",
+                f"  └ {task['task_name']:25s} | {estado} | "
+                f"cola: {task['queue_size']}\n"
+            )
+        text.insert("end", "\n")
+
+    text.config(state="disabled")
+\end{lstlisting}
+
+% ─── 5. Integración con el Módulo 4 ─────────────────────────────────────────
+\section{Integración con el Módulo 4 (Reportería)}
+
+Cuando la simulación termina, la GUI debe ofrecer un botón \textbf{Generar
+reporte}. La interfaz entre el Módulo 3 y el Módulo 4 es la siguiente:
+
+\begin{lstlisting}
+from linprod.reports import generate_report   # Modulo 4
+
+def _on_generate_report(self):
+    if self._sim and self._sim.is_done:
+        stats = self._sim.get_stats()
+        generate_report(stats)   # el Modulo 4 define esta funcion
+\end{lstlisting}
+
+Mientras el Módulo 4 no esté listo, puedes dejar el botón desactivado o hacer
+que muestre los stats en una ventana de texto como las del paso 6.
+
+% ─── 6. Checklist de entrega ────────────────────────────────────────────────
+\section{Checklist antes de entregar}
+
+\begin{itemize}[leftmargin=2em, label=\( \square \)]
+    \item La GUI arranca sin errores con \texttt{python3 -m linprod.gui.app}.
+    \item Se pueden agregar procesos y tareas en tiempo de ejecución (sin
+          límite).
+    \item El proceso inicial y final se marcan explícitamente.
+    \item \texttt{validate()} es llamado antes de iniciar; sus errores se
+          muestran al usuario.
+    \item Los botones Iniciar / Pausar / Reanudar / Reiniciar funcionan.
+    \item Al pausar se muestra el estado detallado de cada tarea.
+    \item El estado de cada tarea se actualiza visualmente en cada ciclo.
+    \item Hay al menos un efecto gráfico (colores según estado busy/libre,
+          barra de progreso, etc.).
+    \item Al terminar se notifica al usuario con el ciclo final.
+    \item El código no modifica \texttt{model.py} ni \texttt{simulator.py}.
+    \item Los imports son desde \texttt{linprod.model} y
+          \texttt{linprod.simulator}.
+\end{itemize}
+
+% ─── 7. Advertencias frecuentes ─────────────────────────────────────────────
+\section{Errores comunes a evitar}
+
+\begin{advertencia}
+\textbf{Nunca uses \texttt{time.sleep()} dentro de Tkinter.} Bloquea el hilo
+principal y la ventana deja de responder. Usa siempre \texttt{after()}.
+\end{advertencia}
+
+\begin{advertencia}
+\textbf{Nunca llames a \texttt{sim.step()} en un hilo aparte.} Tkinter y los
+objetos de los Módulos 1/2 no son thread-safe. Todo el loop de simulación debe
+ocurrir en el hilo principal mediante \texttt{after()}.
+\end{advertencia}
+
+\begin{advertencia}
+\textbf{No importes desde \texttt{linprod.gui} dentro de \texttt{model.py} ni
+\texttt{simulator.py}.} La dependencia es unidireccional: GUI $\rightarrow$
+Simulator $\rightarrow$ Model.
+\end{advertencia}
+
+\begin{info}
+Si usas \textbf{CustomTkinter}, todos los principios son los mismos. Solo
+reemplaza \texttt{tk.Tk} por \texttt{ctk.CTk}, \texttt{ttk.Button} por
+\texttt{ctk.CTkButton}, etc. El \texttt{after()} y el \texttt{mainloop()} son
+idénticos.
+\end{info}
+
+% ─── 8. Cómo ejecutar ────────────────────────────────────────────────────────
+\section{Cómo ejecutar la aplicación}
+
+Desde la raíz del repositorio (\texttt{LinProd-ModelacionHardware/}):
+
+\begin{lstlisting}[language=bash, numbers=none]
+# Ejecutar la GUI
+python3 -m linprod.gui.app
+
+# Ejecutar los tests unitarios (cuando esten escritos)
+python3 -m pytest tests/
+
+# Verificar que el Modulo 1 sigue funcionando
+python3 linprod/model.py
+
+# Verificar que el Modulo 2 sigue funcionando
+python3 -m linprod.simulator
+\end{lstlisting}
+
+\begin{info}
+El Módulo 2 (\texttt{simulator.py}) debe ejecutarse como módulo
+(\texttt{python3 -m linprod.simulator}), no como script directo, porque
+utiliza imports absolutos del paquete \texttt{linprod}.
+\end{info}
+
+\end{document}

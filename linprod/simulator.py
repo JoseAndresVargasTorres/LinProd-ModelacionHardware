@@ -103,12 +103,13 @@ class Simulator:
 
         self._started = True
 
-    def run(self, n_cycles: int) -> None:
+    def run(self, n_cycles: int = 100_000) -> None:
         """
-        Avanza la simulación hasta `n_cycles` ciclos.
+        Avanza la simulación hasta `n_cycles` ciclos (por defecto 100 000).
 
         Se detiene antes de tiempo si la simulación está pausada o si todos
-        los productos ya completaron la línea.
+        los productos ya completaron la línea, por lo que llamar a run() sin
+        argumentos equivale a "correr hasta terminar".
 
         Lanza RuntimeError si start() no fue llamado antes.
         """
@@ -355,16 +356,8 @@ class Simulator:
               nuevo desde la tarea anterior (que ya no le hará tick este
               ciclo).
 
-        Estructura en 4 pasos:
-
-        Paso 1: Aplicar transferencias INTER-proceso diferidas del ciclo
-                anterior (los productos que cruzaron un proceso en N-1).
-        Paso 2: Para cada proceso, tickear sus tareas en orden inverso.
-                Recolectar el producto que termina la última tarea del
-                proceso (que sale del proceso completo).
-        Paso 3: Para cada producto que salió del proceso, decidir si
-                completa la línea (proceso final) o se difiere al siguiente.
-        Paso 4: Guardar la lista de pendientes para el próximo ciclo.
+        Esto garantiza que un producto que necesita 3+2+4+1+2=12 ciclos de
+        procesamiento tarde exactamente 12 ciclos (sin ciclos regalados).
         """
         self.current_cycle += 1
 
@@ -381,8 +374,6 @@ class Simulator:
             n_tasks = len(tasks)
 
             # Tickeamos las tareas en orden INVERSO (última → primera).
-            # La tarea final del proceso es la única cuyo "finished" sale
-            # del proceso. Las demás solo entregan a la siguiente tarea.
             for i in range(n_tasks - 1, -1, -1):
                 task = tasks[i]
                 finished = task.tick(self.current_cycle)
@@ -391,18 +382,12 @@ class Simulator:
 
                 is_last_task = (i == n_tasks - 1)
                 if is_last_task:
-                    # Salió del proceso completo
                     if proc.is_final:
                         finished.mark_completed(self.current_cycle)
                         self._completed_products.append(finished)
                     elif proc.next_process is not None:
-                        # Diferir entrada al siguiente proceso
                         new_pending.append((finished, proc.next_process))
                 else:
-                    # Entrega INMEDIATA a la siguiente tarea del mismo proceso.
-                    # Como tickeamos en orden inverso, la siguiente tarea
-                    # (índice i+1) ya hizo su tick este ciclo, así que el
-                    # producto se quedará "fresco" hasta el próximo ciclo.
                     tasks[i + 1].receive(finished, self.current_cycle)
 
         # ── Paso 4: guardar pendientes inter-proceso para el siguiente ciclo ───
@@ -473,13 +458,13 @@ if __name__ == "__main__":
         print(f"  P{p['product_id']}: entró={p['entry_time']}  "
               f"salió={p['exit_time']}  total={p['total_time']}")
 
-    # Verificar resultados esperados según la guía del PDF
+    # Verificar resultados esperados (pipeline real: cada ciclo vale 1 unidad)
     expected = {
         1: (0, 12, 12),
         2: (0, 16, 16),
         3: (0, 20, 20),
     }
-    print("\n  ── Verificación contra resultado esperado (guía PDF) ──")
+    print("\n  ── Verificación contra resultado esperado ──")
     all_ok = True
     for p in stats["product_stats"]:
         pid = p["product_id"]
