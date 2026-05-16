@@ -1,0 +1,23 @@
+# Python — cachés y compilados
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Reportes PDF generados por la simulación / pruebas
+reporte_linprod*.pdf
+reporte_linprod_prueba.pdf
+
+# Archivos comprimidos y temporales
+*.zip
+githubrepositorio.txt
+
+# PDF duplicado en raíz (la versión correcta está en docs/)
+/Docu_Proyecto2_Modelacion.pdf
+
+# OS
+.DS_Store
+Thumbs.db

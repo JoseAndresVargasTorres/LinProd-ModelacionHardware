@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1175 660" width="1175" height="660">
+
+<defs>
+  <!-- arrowhead sólido (composición / asociación) -->
+  <marker id="arrow" markerWidth="10" markerHeight="7"
+          refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0,10 3.5,0 7" fill="#004680"/>
+  </marker>
+  <!-- arrowhead abierto (dependencia dashed) -->
+  <marker id="dep" markerWidth="10" markerHeight="7"
+          refX="9" refY="3.5" orient="auto">
+    <polyline points="0 0,10 3.5,0 7" fill="none"
+              stroke="#004680" stroke-width="1.6"/>
+  </marker>
+</defs>
+
+<!-- ═══════════════ FONDO ═══════════════ -->
+<rect width="1175" height="660" fill="#f5f8fc"/>
+
+<!-- ═══════════════ MÓDULOS (capas con borde punteado) ═══════════════ -->
+
+<!-- model.py — capa de fondo para las 4 clases de modelo -->
+<rect x="10" y="38" width="1155" height="260"
+      rx="5" fill="none" stroke="#a8bcd8"
+      stroke-width="1.2" stroke-dasharray="6,4"/>
+<text x="16" y="34" font-size="10" fill="#7090b0"
+      font-family="Arial,sans-serif" font-style="italic">«módulo: linprod/model.py»</text>
+
+<!-- simulator.py -->
+<rect x="188" y="358" width="242" height="290"
+      rx="5" fill="none" stroke="#a8bcd8"
+      stroke-width="1.2" stroke-dasharray="6,4"/>
+<text x="193" y="354" font-size="10" fill="#7090b0"
+      font-family="Arial,sans-serif" font-style="italic">«módulo: simulator.py»</text>
+
+<!-- app.py -->
+<rect x="908" y="358" width="253" height="178"
+      rx="5" fill="none" stroke="#a8bcd8"
+      stroke-width="1.2" stroke-dasharray="6,4"/>
+<text x="913" y="354" font-size="10" fill="#7090b0"
+      font-family="Arial,sans-serif" font-style="italic">«módulo: app.py»</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  CLASE  Product    x=20  y=50  w=210  h=200               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<clipPath id="cProd"><rect x="20" y="50" width="210" height="200" rx="3"/></clipPath>
+<rect x="20" y="50" width="210" height="200" rx="3"
+      fill="white" stroke="#004680" stroke-width="1.6"/>
+<rect x="20" y="50" width="210" height="25" fill="#004680"
+      clip-path="url(#cProd)"/>
+<text x="125" y="67" text-anchor="middle" font-size="13"
+      font-weight="bold" fill="white" font-family="Arial,sans-serif">Product</text>
+
+<line x1="20" y1="75" x2="230" y2="75" stroke="#004680" stroke-width="0.8"/>
+
+<text x="26" y="92"  font-size="11" fill="#111" font-family="monospace">+ product_id : int</text>
+<text x="26" y="108" font-size="11" fill="#111" font-family="monospace">+ entry_time : int</text>
+<text x="26" y="124" font-size="11" fill="#111" font-family="monospace">+ exit_time : int|None</text>
+<text x="26" y="140" font-size="11" fill="#111" font-family="monospace">+ task_history : list</text>
+<text x="26" y="156" font-size="11" fill="#555" font-family="monospace">/ is_completed : bool</text>
+<text x="26" y="172" font-size="11" fill="#555" font-family="monospace">/ total_time : int|None</text>
+
+<line x1="20" y1="180" x2="230" y2="180" stroke="#004680" stroke-width="0.5"/>
+
+<text x="26" y="196" font-size="11" fill="#111" font-family="monospace">+ record_task_start()</text>
+<text x="26" y="212" font-size="11" fill="#111" font-family="monospace">+ record_task_end()</text>
+<text x="26" y="228" font-size="11" fill="#111" font-family="monospace">+ mark_completed()</text>
+<text x="26" y="244" font-size="11" fill="#111" font-family="monospace">+ snapshot() : dict</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  CLASE  Task       x=300  y=50  w=210  h=216              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<clipPath id="cTask"><rect x="300" y="50" width="210" height="216" rx="3"/></clipPath>
+<rect x="300" y="50" width="210" height="216" rx="3"
+      fill="white" stroke="#004680" stroke-width="1.6"/>
+<rect x="300" y="50" width="210" height="25" fill="#004680"
+      clip-path="url(#cTask)"/>
+<text x="405" y="67" text-anchor="middle" font-size="13"
+      font-weight="bold" fill="white" font-family="Arial,sans-serif">Task</text>
+
+<line x1="300" y1="75" x2="510" y2="75" stroke="#004680" stroke-width="0.8"/>
+
+<text x="306" y="92"  font-size="11" fill="#111" font-family="monospace">+ name : str</text>
+<text x="306" y="108" font-size="11" fill="#111" font-family="monospace">+ process_time : int</text>
+<text x="306" y="124" font-size="11" fill="#111" font-family="monospace">+ busy : bool</text>
+<text x="306" y="140" font-size="11" fill="#111" font-family="monospace">+ process : Process</text>
+<text x="306" y="156" font-size="11" fill="#555" font-family="monospace">/ current_product</text>
+
+<line x1="300" y1="164" x2="510" y2="164" stroke="#004680" stroke-width="0.5"/>
+
+<text x="306" y="180" font-size="11" fill="#111" font-family="monospace">+ receive(p, cycle)</text>
+<text x="306" y="196" font-size="11" fill="#111" font-family="monospace">+ tick(c) : P|None</text>
+<text x="306" y="212" font-size="11" fill="#111" font-family="monospace">+ is_done() : bool</text>
+<text x="306" y="228" font-size="11" fill="#111" font-family="monospace">+ queue_size() : int</text>
+<text x="306" y="244" font-size="11" fill="#111" font-family="monospace">+ reset()</text>
+<text x="306" y="260" font-size="11" fill="#111" font-family="monospace">+ snapshot() : dict</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  CLASE  Process    x=590  y=50  w=210  h=232              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<clipPath id="cProc"><rect x="590" y="50" width="210" height="232" rx="3"/></clipPath>
+<rect x="590" y="50" width="210" height="232" rx="3"
+      fill="white" stroke="#004680" stroke-width="1.6"/>
+<rect x="590" y="50" width="210" height="25" fill="#004680"
+      clip-path="url(#cProc)"/>
+<text x="695" y="67" text-anchor="middle" font-size="13"
+      font-weight="bold" fill="white" font-family="Arial,sans-serif">Process</text>
+
+<line x1="590" y1="75" x2="800" y2="75" stroke="#004680" stroke-width="0.8"/>
+
+<text x="596" y="92"  font-size="11" fill="#111" font-family="monospace">+ name : str</text>
+<text x="596" y="108" font-size="11" fill="#111" font-family="monospace">+ is_initial : bool</text>
+<text x="596" y="124" font-size="11" fill="#111" font-family="monospace">+ is_final : bool</text>
+<text x="596" y="140" font-size="11" fill="#111" font-family="monospace">+ next_process : Process</text>
+<text x="596" y="156" font-size="11" fill="#555" font-family="monospace">/ tasks : list[Task]</text>
+<text x="596" y="172" font-size="11" fill="#555" font-family="monospace">/ task_count : int</text>
+
+<line x1="590" y1="180" x2="800" y2="180" stroke="#004680" stroke-width="0.5"/>
+
+<text x="596" y="196" font-size="11" fill="#111" font-family="monospace">+ add_task(task)</text>
+<text x="596" y="212" font-size="11" fill="#111" font-family="monospace">+ receive(p, cycle)</text>
+<text x="596" y="228" font-size="11" fill="#111" font-family="monospace">+ tick(c) : list</text>
+<text x="596" y="244" font-size="11" fill="#111" font-family="monospace">+ is_done() : bool</text>
+<text x="596" y="260" font-size="11" fill="#111" font-family="monospace">+ reset()</text>
+<text x="596" y="276" font-size="11" fill="#111" font-family="monospace">+ snapshot() : dict</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  CLASE  ProductionLine   x=920  y=50  w=225  h=168        -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<clipPath id="cPL"><rect x="920" y="50" width="225" height="168" rx="3"/></clipPath>
+<rect x="920" y="50" width="225" height="168" rx="3"
+      fill="white" stroke="#004680" stroke-width="1.6"/>
+<rect x="920" y="50" width="225" height="25" fill="#004680"
+      clip-path="url(#cPL)"/>
+<text x="1032" y="67" text-anchor="middle" font-size="12"
+      font-weight="bold" fill="white" font-family="Arial,sans-serif">ProductionLine</text>
+
+<line x1="920" y1="75" x2="1145" y2="75" stroke="#004680" stroke-width="0.8"/>
+
+<text x="926" y="92"  font-size="11" fill="#555" font-family="monospace">/ processes : list</text>
+<text x="926" y="108" font-size="11" fill="#555" font-family="monospace">/ process_count : int</text>
+<text x="926" y="124" font-size="11" fill="#555" font-family="monospace">/ initial_process</text>
+<text x="926" y="140" font-size="11" fill="#555" font-family="monospace">/ final_process</text>
+
+<line x1="920" y1="148" x2="1145" y2="148" stroke="#004680" stroke-width="0.5"/>
+
+<text x="926" y="164" font-size="11" fill="#111" font-family="monospace">+ add_process(p)</text>
+<text x="926" y="180" font-size="11" fill="#111" font-family="monospace">+ validate()</text>
+<text x="926" y="196" font-size="11" fill="#111" font-family="monospace">+ reset()</text>
+<text x="926" y="212" font-size="11" fill="#111" font-family="monospace">+ snapshot() : dict</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  CLASE  Simulator   x=200  y=372  w=210  h=264            -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<clipPath id="cSim"><rect x="200" y="372" width="210" height="264" rx="3"/></clipPath>
+<rect x="200" y="372" width="210" height="264" rx="3"
+      fill="white" stroke="#004680" stroke-width="1.6"/>
+<rect x="200" y="372" width="210" height="25" fill="#004680"
+      clip-path="url(#cSim)"/>
+<text x="305" y="389" text-anchor="middle" font-size="13"
+      font-weight="bold" fill="white" font-family="Arial,sans-serif">Simulator</text>
+
+<line x1="200" y1="397" x2="410" y2="397" stroke="#004680" stroke-width="0.8"/>
+
+<text x="206" y="414" font-size="11" fill="#111" font-family="monospace">+ current_cycle : int</text>
+<text x="206" y="430" font-size="11" fill="#111" font-family="monospace">- n_products : int</text>
+<text x="206" y="446" font-size="11" fill="#111" font-family="monospace">- line : ProductionLine</text>
+<text x="206" y="462" font-size="11" fill="#555" font-family="monospace">/ is_started : bool</text>
+<text x="206" y="478" font-size="11" fill="#555" font-family="monospace">/ is_paused : bool</text>
+<text x="206" y="494" font-size="11" fill="#555" font-family="monospace">/ is_done : bool</text>
+
+<line x1="200" y1="502" x2="410" y2="502" stroke="#004680" stroke-width="0.5"/>
+
+<text x="206" y="518" font-size="11" fill="#111" font-family="monospace">+ start()</text>
+<text x="206" y="534" font-size="11" fill="#111" font-family="monospace">+ run(n_cycles)</text>
+<text x="206" y="550" font-size="11" fill="#111" font-family="monospace">+ step()</text>
+<text x="206" y="566" font-size="11" fill="#111" font-family="monospace">+ pause() : dict</text>
+<text x="206" y="582" font-size="11" fill="#111" font-family="monospace">+ resume()</text>
+<text x="206" y="598" font-size="11" fill="#111" font-family="monospace">+ reset()</text>
+<text x="206" y="614" font-size="11" fill="#111" font-family="monospace">+ get_stats() : dict</text>
+<text x="206" y="630" font-size="11" fill="#111" font-family="monospace">+ snapshot() : dict</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  CLASE  LinProdApp   x=920  y=372  w=225  h=152           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<clipPath id="cApp"><rect x="920" y="372" width="225" height="152" rx="3"/></clipPath>
+<rect x="920" y="372" width="225" height="152" rx="3"
+      fill="white" stroke="#004680" stroke-width="1.6"/>
+<rect x="920" y="372" width="225" height="25" fill="#004680"
+      clip-path="url(#cApp)"/>
+<text x="1032" y="389" text-anchor="middle" font-size="13"
+      font-weight="bold" fill="white" font-family="Arial,sans-serif">LinProdApp</text>
+
+<line x1="920" y1="397" x2="1145" y2="397" stroke="#004680" stroke-width="0.8"/>
+
+<text x="926" y="414" font-size="11" fill="#111" font-family="monospace">- _line : ProductionLine</text>
+<text x="926" y="430" font-size="11" fill="#111" font-family="monospace">- _sim : Simulator</text>
+
+<line x1="920" y1="438" x2="1145" y2="438" stroke="#004680" stroke-width="0.5"/>
+
+<text x="926" y="454" font-size="11" fill="#111" font-family="monospace">+ start_simulation()</text>
+<text x="926" y="470" font-size="11" fill="#111" font-family="monospace">+ pause_simulation()</text>
+<text x="926" y="486" font-size="11" fill="#111" font-family="monospace">+ step()</text>
+<text x="926" y="502" font-size="11" fill="#111" font-family="monospace">+ generate_pdf()</text>
+<text x="926" y="518" font-size="11" fill="#111" font-family="monospace">+ reset()</text>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  RELACIONES                                                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<!--
+  ── 1. ProductionLine ◆──────────────── Process  (composición 1 : 1..*) ──
+  El diamante nace en el borde izquierdo de PL (x=920, cy=134).
+  La flecha llega al borde derecho de Process (x=800, y=166).
+  Hueco entre cajas: x=800 … x=920.
+  Multiplicidades colocadas en ese hueco, sin tocar ninguna caja.
+-->
+<polygon points="920,134 909,128 898,134 909,140" fill="#004680"/>
+<line x1="898" y1="134" x2="800" y2="166"
+      stroke="#004680" stroke-width="1.6" marker-end="url(#arrow)"/>
+<!-- "1" junto al diamante (lado PL), en el hueco -->
+<text x="902" y="125" font-size="11" fill="#004680"
+      font-family="Arial,sans-serif" font-weight="bold">1</text>
+<!-- "1..*" junto a la punta (lado Process), en el hueco -->
+<text x="808" y="160" font-size="11" fill="#004680"
+      font-family="Arial,sans-serif" font-weight="bold">1..*</text>
+
+<!--
+  ── 2. Process ◆──────────────────────── Task  (composición 1 : 1..*) ──
+  Diamante en borde izquierdo de Process (x=590, cy=166).
+  Flecha al borde derecho de Task (x=510, y=158).
+  Hueco entre cajas: x=510 … x=590.
+-->
+<polygon points="590,166 579,160 568,166 579,172" fill="#004680"/>
+<line x1="568" y1="166" x2="510" y2="158"
+      stroke="#004680" stroke-width="1.6" marker-end="url(#arrow)"/>
+<!-- "1" junto al diamante (lado Process), en el hueco -->
+<text x="572" y="157" font-size="11" fill="#004680"
+      font-family="Arial,sans-serif" font-weight="bold">1</text>
+<!-- "1..*" junto a la punta (lado Task), en el hueco -->
+<text x="514" y="150" font-size="11" fill="#004680"
+      font-family="Arial,sans-serif" font-weight="bold">1..*</text>
+
+<!--
+  ── 3. Task ──────────────────────────── Product  (asociación "procesa 0..1") ──
+  Línea del borde izquierdo de Task (x=300, y=158) al borde derecho de Product (x=230, y=150).
+  Hueco entre cajas: x=230 … x=300.
+  Etiqueta de rol encima de la línea; multiplicidad debajo, ambas en el hueco.
+-->
+<line x1="300" y1="158" x2="230" y2="150"
+      stroke="#004680" stroke-width="1.6" marker-end="url(#arrow)"/>
+<!-- rol de la asociación, encima de la línea, en el hueco -->
+<text x="240" y="142" font-size="9" fill="#555"
+      font-family="Arial,sans-serif" font-style="italic">procesa</text>
+<!-- multiplicidad 0..1 en lado Product, debajo de la línea, en el hueco -->
+<text x="234" y="168" font-size="11" fill="#004680"
+      font-family="Arial,sans-serif" font-weight="bold">0..1</text>
+
+<!--
+  ── 4. Process ──────────── (auto-ref) next_process : 0..1 ──
+  Lazo que sale del borde derecho de Process (x=800) en y=130,
+  rodea el hueco hasta x=855 y regresa a y=215.
+  El hueco Process─PL tiene 120 px (x=800…x=920).
+  Etiquetas en ese hueco, ninguna toca las cajas ni el lazo.
+-->
+<path d="M800,130 H855 V215 H800"
+      fill="none" stroke="#004680" stroke-width="1.6"
+      marker-end="url(#arrow)"/>
+<!-- rol encima del segmento horizontal superior del lazo -->
+<text x="803" y="122" font-size="9" fill="#555"
+      font-family="Arial,sans-serif" font-style="italic">next_process</text>
+<!-- multiplicidad 0..1 debajo del punto de regreso del lazo (punta de flecha en y=215) -->
+<text x="803" y="232" font-size="11" fill="#004680"
+      font-family="Arial,sans-serif" font-weight="bold">0..1</text>
+
+<!--
+  ── 5. Simulator -.-.-.-> ProductionLine  (dependencia «usa») ──
+  Camino en L: sube del tope de Simulator, cruza horizontal a x=1032,
+  baja al fondo de PL (y=218). La etiqueta «usa» va en el segmento
+  horizontal (y=328), en el espacio libre entre las dos filas de módulos.
+-->
+<path d="M305,372 V328 H1032 V218"
+      fill="none" stroke="#004680" stroke-width="1.4"
+      stroke-dasharray="8,4" marker-end="url(#dep)"/>
+<text x="590" y="320" font-size="10" fill="#004680"
+      font-family="Arial,sans-serif" font-style="italic">«usa»</text>
+
+<!--
+  ── 6. LinProdApp -.-.-.-> Simulator  (dependencia «usa») ──
+  Diagonal desde borde izquierdo de LinProdApp (920, 448)
+  hasta borde derecho de Simulator (410, 504).
+  Etiqueta en el espacio abierto entre las dos clases.
+-->
+<line x1="920" y1="448" x2="410" y2="504"
+      stroke="#004680" stroke-width="1.4"
+      stroke-dasharray="8,4" marker-end="url(#dep)"/>
+<text x="645" y="460" font-size="10" fill="#004680"
+      font-family="Arial,sans-serif" font-style="italic">«usa»</text>
+
+</svg>
